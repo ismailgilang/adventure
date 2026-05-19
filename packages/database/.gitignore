@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Environment variables — NEVER commit these
+.env
+.env.*
+!.env.example
+
+# Build outputs
+dist/
+
+# Drizzle generated files (optional, hapus jika ingin commit migrations)
+drizzle/
+
+# Misc
+.DS_Store
+
+# TypeScript
+*.tsbuildinfo
