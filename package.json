@@ -12,5 +12,8 @@
     "build:core": "npm run build -w packages/core",
     "build:database": "npm run build -w packages/database",
     "build:all": "npm run build --workspaces --if-present"
+  },
+  "devDependencies": {
+    "@opennextjs/cloudflare": "^1.19.10"
   }
 }

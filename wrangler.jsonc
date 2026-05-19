@@ -1,0 +1,5 @@
+{
+  "name": "adventure",
+  "main": "apps/website/.open-next/worker.js",
+  "compatibility_date": "2026-05-19"
+}
