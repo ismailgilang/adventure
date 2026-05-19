@@ -37,11 +37,25 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.db = void 0;
-const serverless_1 = require("@neondatabase/serverless");
-const neon_http_1 = require("drizzle-orm/neon-http");
+const serverless = __importStar(require("@neondatabase/serverless"));
+const neonHttp = __importStar(require("drizzle-orm/neon-http"));
 const schema = __importStar(require("./schema"));
-// Enable WebSocket connection caching for Edge Environment compatibility
-serverless_1.neonConfig.fetchConnectionCache = true;
+// Helper to safely extract exports from CommonJS or ESM imports in edge bundlers
+const getExport = (module, key) => {
+    if (!module)
+        return undefined;
+    if (module[key] !== undefined)
+        return module[key];
+    if (module.default && module.default[key] !== undefined)
+        return module.default[key];
+    return undefined;
+};
+const neon = getExport(serverless, 'neon');
+const neonConfig = getExport(serverless, 'neonConfig');
+const drizzle = getExport(neonHttp, 'drizzle');
+if (neonConfig) {
+    neonConfig.fetchConnectionCache = true;
+}
 let _db = null;
 function getDbInstance() {
     if (!_db) {
@@ -49,7 +63,7 @@ function getDbInstance() {
         if (!connectionString) {
             throw new Error("DATABASE_URL environment variable is not defined!");
         }
-        _db = (0, neon_http_1.drizzle)((0, serverless_1.neon)(connectionString), { schema });
+        _db = drizzle(neon(connectionString), { schema });
     }
     return _db;
 }

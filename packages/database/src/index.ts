@@ -1,9 +1,22 @@
-import { neon, neonConfig } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-http';
+import * as serverless from '@neondatabase/serverless';
+import * as neonHttp from 'drizzle-orm/neon-http';
 import * as schema from './schema';
 
-// Enable WebSocket connection caching for Edge Environment compatibility
-neonConfig.fetchConnectionCache = true;
+// Helper to safely extract exports from CommonJS or ESM imports in edge bundlers
+const getExport = (module: any, key: string) => {
+  if (!module) return undefined;
+  if (module[key] !== undefined) return module[key];
+  if (module.default && module.default[key] !== undefined) return module.default[key];
+  return undefined;
+};
+
+const neon = getExport(serverless, 'neon');
+const neonConfig = getExport(serverless, 'neonConfig');
+const drizzle = getExport(neonHttp, 'drizzle');
+
+if (neonConfig) {
+  neonConfig.fetchConnectionCache = true;
+}
 
 let _db: any = null;
 
