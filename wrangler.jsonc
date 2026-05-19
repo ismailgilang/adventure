@@ -2,5 +2,9 @@
   "name": "adventure",
   "main": "apps/website/.open-next/worker.js",
   "compatibility_date": "2026-05-19",
-  "compatibility_flags": ["nodejs_compat"]
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": "apps/website/.open-next/assets",
+    "binding": "ASSETS"
+  }
 }
