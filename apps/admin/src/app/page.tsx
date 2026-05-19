@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import ImageUpload from "../components/ImageUpload";
 
 export default function AdminPage() {
   // Authentication states
@@ -756,8 +757,7 @@ export default function AdminPage() {
                     <input type="text" value={hero.buttonText} onChange={(e) => setHero({ ...hero, buttonText: e.target.value })} required className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:border-indigo-500 text-slate-800 text-sm" />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">URL Gambar Latar</label>
-                    <input type="text" value={hero.imageUrl || ""} onChange={(e) => setHero({ ...hero, imageUrl: e.target.value })} className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:border-indigo-500 text-slate-800 text-sm" />
+                    <ImageUpload label="URL Gambar Latar" value={hero.imageUrl || ""} onChange={(url) => setHero({ ...hero, imageUrl: url })} section="hero-section" />
                   </div>
                 </div>
                 <button type="submit" className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition-colors shadow-md">Simpan Hero Banner</button>
@@ -797,8 +797,7 @@ export default function AdminPage() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">URL Gambar Utama</label>
-                  <input type="text" value={about.imageUrl || ""} onChange={(e) => setAbout({ ...about, imageUrl: e.target.value })} className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:border-indigo-500 text-slate-800 text-sm" />
+                  <ImageUpload label="URL Gambar Utama" value={about.imageUrl || ""} onChange={(url) => setAbout({ ...about, imageUrl: url })} section="about-section" />
                 </div>
                 <button type="submit" className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition-colors shadow-md">Simpan Tentang Kami</button>
               </form>
@@ -1014,8 +1013,7 @@ export default function AdminPage() {
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">URL Gambar Utama</label>
-                      <input type="text" value={pkgForm.imageUrl} onChange={(e) => setPkgForm({ ...pkgForm, imageUrl: e.target.value })} className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-sm" />
+                      <ImageUpload label="URL Gambar Utama" value={pkgForm.imageUrl || ""} onChange={(url) => setPkgForm({ ...pkgForm, imageUrl: url })} section="packages" />
                     </div>
                     <div>
                       <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Status Visibilitas</label>
@@ -1041,8 +1039,7 @@ export default function AdminPage() {
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">URL Gambar Sampul</label>
-                      <input type="text" value={artForm.imageUrl} onChange={(e) => setArtForm({ ...artForm, imageUrl: e.target.value })} className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-sm" />
+                      <ImageUpload label="URL Gambar Sampul" value={artForm.imageUrl || ""} onChange={(url) => setArtForm({ ...artForm, imageUrl: url })} section="articles" />
                     </div>
                     <div>
                       <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Status Publikasi</label>
@@ -1069,8 +1066,7 @@ export default function AdminPage() {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">URL Foto Avatar</label>
-                    <input type="text" value={teamForm.imageUrl} onChange={(e) => setTeamForm({ ...teamForm, imageUrl: e.target.value })} className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-sm" />
+                    <ImageUpload label="URL Foto Avatar" value={teamForm.imageUrl || ""} onChange={(url) => setTeamForm({ ...teamForm, imageUrl: url })} section="team" />
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Link Profil Instagram</label>
@@ -1102,8 +1098,7 @@ export default function AdminPage() {
                       <input type="number" min="1" max="5" value={testForm.rating} onChange={(e) => setTestForm({ ...testForm, rating: parseInt(e.target.value) || 5 })} required className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-sm" />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">URL Foto Avatar</label>
-                      <input type="text" value={testForm.imageUrl} onChange={(e) => setTestForm({ ...testForm, imageUrl: e.target.value })} className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-sm" />
+                      <ImageUpload label="URL Foto Avatar" value={testForm.imageUrl || ""} onChange={(url) => setTestForm({ ...testForm, imageUrl: url })} section="testimonials" />
                     </div>
                   </div>
                 </>
