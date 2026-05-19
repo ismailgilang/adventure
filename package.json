@@ -1,0 +1,16 @@
+{
+  "name": "adventure-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:website": "npm run dev -w apps/website",
+    "dev:admin": "npm run dev -w apps/admin",
+    "build:core": "npm run build -w packages/core",
+    "build:database": "npm run build -w packages/database",
+    "build:all": "npm run build --workspaces --if-present"
+  }
+}
