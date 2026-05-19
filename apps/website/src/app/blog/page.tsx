@@ -14,7 +14,6 @@ interface ArticleData {
 
 export default function BlogPage() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [activeFilter, setActiveFilter] = useState("all");
   const [dbArticles, setDbArticles] = useState<any[]>([]);
 
   const toggleMenu = () => setMenuOpen(!menuOpen);
@@ -124,11 +123,6 @@ export default function BlogPage() {
     }
   ];
 
-  const filteredPosts =
-    activeFilter === "all"
-      ? blogPosts
-      : blogPosts.filter((p) => p.category === activeFilter);
-
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 flex flex-col">
       {/* Navbar */}
@@ -195,17 +189,9 @@ export default function BlogPage() {
       {/* Filters and Grid */}
       <main className="flex-grow py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Filter Categories */}
-          <div className="flex justify-center gap-3 mb-12 flex-wrap">
-            <button onClick={() => setActiveFilter("all")} className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all ${activeFilter === "all" ? "bg-primary-600 text-white shadow-lg shadow-primary-500/25" : "bg-white text-gray-600 border border-gray-200 hover:border-primary-300 hover:text-primary-600"}`}>Semua</button>
-            <button onClick={() => setActiveFilter("destinasi")} className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all ${activeFilter === "destinasi" ? "bg-primary-600 text-white shadow-lg shadow-primary-500/25" : "bg-white text-gray-600 border border-gray-200 hover:border-primary-300 hover:text-primary-600"}`}>Panduan Wisata</button>
-            <button onClick={() => setActiveFilter("tips")} className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all ${activeFilter === "tips" ? "bg-primary-600 text-white shadow-lg shadow-primary-500/25" : "bg-white text-gray-600 border border-gray-200 hover:border-primary-300 hover:text-primary-600"}`}>Tips & Trik</button>
-            <button onClick={() => setActiveFilter("budaya")} className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all ${activeFilter === "budaya" ? "bg-primary-600 text-white shadow-lg shadow-primary-500/25" : "bg-white text-gray-600 border border-gray-200 hover:border-primary-300 hover:text-primary-600"}`}>Budaya & Kuliner</button>
-          </div>
-
           {/* Blog Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredPosts.map((post) => (
+            {blogPosts.map((post) => (
               <article key={post.id} className="glass-card rounded-3xl overflow-hidden card-hover flex flex-col shadow-lg border border-gray-100/50 reveal active">
                 <div className="relative h-60 overflow-hidden">
                   <img src={post.image} alt={post.title} className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"/>

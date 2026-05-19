@@ -19,7 +19,6 @@ interface Package {
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [navScrolled, setNavScrolled] = useState(false);
-  const [activeFilter, setActiveFilter] = useState("all");
   const [backToTopVisible, setBackToTopVisible] = useState(false);
 
   // References for scroll animations and counters
@@ -43,13 +42,13 @@ export default function Home() {
     imageUrl: "https://image.qwenlm.ai/public_source/3524cccd-e29b-4d9f-9189-5394346ea852/1c53a6f25-d82a-4c9b-a4f1-74590a7c94ac.png"
   });
   const [team, setTeam] = useState<any[]>([
-    { name: "M. Fahmi Maellana", role: "Founder & CEO", imageUrl: "/team/ceo.jpg" },
-    { name: "Sarah Amelia", role: "Head of Operations", imageUrl: "/team/sarah.jpg" },
-    { name: "Budi Pratama", role: "Lead Tour Explorer", imageUrl: "/team/budi.jpg" }
+    { name: "M. Fahmi Maellana", role: "Founder & CEO", imageUrl: "https://ui-avatars.com/api/?name=M.+Fahmi+Maellana&background=random" },
+    { name: "Sarah Amelia", role: "Head of Operations", imageUrl: "https://ui-avatars.com/api/?name=Sarah+Amelia&background=random" },
+    { name: "Budi Pratama", role: "Lead Tour Explorer", imageUrl: "https://ui-avatars.com/api/?name=Budi+Pratama&background=random" }
   ]);
   const [testimonials, setTestimonials] = useState<any[]>([
-    { name: "Budi Santoso", role: "Solo Traveler", review: "Pelayanan luar biasa! Trip Raja Ampat benar-benar terencana dengan matang dan sangat menyenangkan.", rating: 5, imageUrl: "/testi/budi.jpg" },
-    { name: "Diana Lestari", role: "Family Adventurer", review: "Liburan keluarga ke Ubud menjadi momen tak terlupakan berkat panduan profesional dari IO Travel.", rating: 5, imageUrl: "/testi/diana.jpg" }
+    { name: "Budi Santoso", role: "Solo Traveler", review: "Pelayanan luar biasa! Trip Raja Ampat benar-benar terencana dengan matang dan sangat menyenangkan.", rating: 5, imageUrl: "https://ui-avatars.com/api/?name=Budi+Santoso&background=random" },
+    { name: "Diana Lestari", role: "Family Adventurer", review: "Liburan keluarga ke Ubud menjadi momen tak terlupakan berkat panduan profesional dari IO Travel.", rating: 5, imageUrl: "https://ui-avatars.com/api/?name=Diana+Lestari&background=random" }
   ]);
   const [features, setFeatures] = useState<any[]>([
     { title: "Destinasi Pilihan", description: "Kami menawarkan pilihan rute petualangan terbaik dan paling eksotis di seluruh Indonesia.", icon: "compass" },
@@ -105,6 +104,14 @@ export default function Home() {
     );
     revealElements.forEach((el) => revealObserver.observe(el));
 
+    const observerInterval = setInterval(() => {
+      const revealElements = document.querySelectorAll(".reveal:not(.observed)");
+      revealElements.forEach((el) => {
+        el.classList.add("observed");
+        revealObserver.observe(el);
+      });
+    }, 500);
+
     // Stats Counters Observer
     const counterObserver = new IntersectionObserver(
       (entries) => {
@@ -144,6 +151,7 @@ export default function Home() {
     });
 
     return () => {
+      clearInterval(observerInterval);
       window.removeEventListener("scroll", handleScroll);
       revealElements.forEach((el) => revealObserver.unobserve(el));
       currentCounters.forEach((c) => {
@@ -158,7 +166,7 @@ export default function Home() {
   const packagesList = dbPackages.length > 0 ? dbPackages.map((pkg) => ({
     id: pkg.id,
     title: pkg.name,
-    category: pkg.slug.includes("ubud") ? "budaya" : "petualangan",
+    category: ((pkg.slug && pkg.slug.includes("ubud")) || (pkg.name && pkg.name.toLowerCase().includes("ubud"))) ? "budaya" : "petualangan",
     duration: pkg.duration,
     rating: "5.0",
     reviews: "98",
@@ -204,11 +212,6 @@ export default function Home() {
       badgeColor: "bg-green-600/90"
     }
   ];
-
-  const filteredPackages =
-    activeFilter === "all"
-      ? packagesList
-      : packagesList.filter((p) => p.category === activeFilter);
 
   return (
     <div className="min-h-screen bg-white text-gray-900">
@@ -564,41 +567,8 @@ export default function Home() {
             </h2>
           </div>
 
-          <div className="flex justify-center gap-3 mb-12 flex-wrap reveal">
-            <button
-              onClick={() => setActiveFilter("all")}
-              className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all ${
-                activeFilter === "all"
-                  ? "bg-primary-600 text-white shadow-lg shadow-primary-500/25"
-                  : "bg-white text-gray-600 border border-gray-200 hover:border-primary-300"
-              }`}
-            >
-              Semua Paket
-            </button>
-            <button
-              onClick={() => setActiveFilter("petualangan")}
-              className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all ${
-                activeFilter === "petualangan"
-                  ? "bg-primary-600 text-white shadow-lg shadow-primary-500/25"
-                  : "bg-white text-gray-600 border border-gray-200 hover:border-primary-300"
-              }`}
-            >
-              Petualangan Alam
-            </button>
-            <button
-              onClick={() => setActiveFilter("budaya")}
-              className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all ${
-                activeFilter === "budaya"
-                  ? "bg-primary-600 text-white shadow-lg shadow-primary-500/25"
-                  : "bg-white text-gray-600 border border-gray-200 hover:border-primary-300"
-              }`}
-            >
-              Budaya & Seni
-            </button>
-          </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredPackages.map((p) => (
+            {packagesList.map((p) => (
               <div
                 key={p.id}
                 className="bg-white rounded-[32px] overflow-hidden shadow-lg border border-gray-100/50 card-hover reveal"
