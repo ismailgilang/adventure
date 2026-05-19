@@ -10,11 +10,13 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@adventure/core": "*",
+    "@adventure/database": "*",
+    "@neondatabase/serverless": "^1.1.0",
+    "drizzle-orm": "^0.45.2",
     "next": "16.2.6",
     "react": "19.2.4",
-    "react-dom": "19.2.4",
-    "@adventure/core": "*",
-    "@adventure/database": "*"
+    "react-dom": "19.2.4"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
