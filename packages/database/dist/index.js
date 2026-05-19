@@ -42,7 +42,27 @@ const neon_http_1 = require("drizzle-orm/neon-http");
 const schema = __importStar(require("./schema"));
 // Enable WebSocket connection caching for Edge Environment compatibility
 serverless_1.neonConfig.fetchConnectionCache = true;
-const connectionString = process.env.DATABASE_URL || '';
-exports.db = connectionString ? (0, neon_http_1.drizzle)((0, serverless_1.neon)(connectionString), { schema }) : null;
+let _db = null;
+function getDbInstance() {
+    if (!_db) {
+        const connectionString = process.env.DATABASE_URL;
+        if (!connectionString) {
+            throw new Error("DATABASE_URL environment variable is not defined!");
+        }
+        _db = (0, neon_http_1.drizzle)((0, serverless_1.neon)(connectionString), { schema });
+    }
+    return _db;
+}
+// Export a Proxy that intercepts all database operations and delegates to the dynamically initialized Drizzle client
+exports.db = new Proxy({}, {
+    get(target, prop, receiver) {
+        const instance = getDbInstance();
+        const value = Reflect.get(instance, prop, receiver);
+        if (typeof value === 'function') {
+            return value.bind(instance);
+        }
+        return value;
+    }
+});
 __exportStar(require("./schema"), exports);
 __exportStar(require("drizzle-orm"), exports);
