@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import { createDb, landingHero, landingAbout, landingTeam, landingTestimonials, landingFeatures, landingCta, tourPackages } from '../../../lib/db';
 import { eq } from 'drizzle-orm';
 
-export const runtime = 'edge';
 export const revalidate = 0;
 
 export async function GET() {

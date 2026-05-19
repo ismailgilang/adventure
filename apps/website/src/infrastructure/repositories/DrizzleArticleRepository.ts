@@ -1,20 +1,24 @@
 import { IArticleRepository, Article } from '@adventure/core';
-import { db, articles, eq } from '@adventure/database';
+import { createDb, articles } from '../../lib/db';
+import { eq } from 'drizzle-orm';
 
 export class DrizzleArticleRepository implements IArticleRepository {
   async findById(id: string): Promise<Article | null> {
+    const db = createDb();
     const results = await db.select().from(articles).where(eq(articles.id, id));
     if (results.length === 0) return null;
     return this.mapToDomain(results[0]);
   }
 
   async findBySlug(slug: string): Promise<Article | null> {
+    const db = createDb();
     const results = await db.select().from(articles).where(eq(articles.slug, slug));
     if (results.length === 0) return null;
     return this.mapToDomain(results[0]);
   }
 
   async findAll(filters?: { status?: 'DRAFT' | 'PUBLISHED' }): Promise<Article[]> {
+    const db = createDb();
     let query = db.select().from(articles);
     if (filters?.status) {
       // @ts-ignore
@@ -25,6 +29,7 @@ export class DrizzleArticleRepository implements IArticleRepository {
   }
 
   async save(article: Omit<Article, 'id' | 'createdAt' | 'updatedAt'>): Promise<Article> {
+    const db = createDb();
     const results = await db.insert(articles).values({
       title: article.title,
       slug: article.slug,
@@ -36,6 +41,7 @@ export class DrizzleArticleRepository implements IArticleRepository {
   }
 
   async update(id: string, article: Partial<Article>): Promise<Article> {
+    const db = createDb();
     const results = await db.update(articles).set({
       title: article.title,
       slug: article.slug,
@@ -48,6 +54,7 @@ export class DrizzleArticleRepository implements IArticleRepository {
   }
 
   async delete(id: string): Promise<boolean> {
+    const db = createDb();
     const results = await db.delete(articles).where(eq(articles.id, id)).returning();
     return results.length > 0;
   }

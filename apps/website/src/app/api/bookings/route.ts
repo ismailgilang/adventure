@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createDb, bookings } from '../../../lib/db';
 
-export const runtime = 'edge';
 export const revalidate = 0;
 
 function generateBookingCode(): string {
