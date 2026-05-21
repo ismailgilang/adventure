@@ -3,22 +3,25 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 
-interface ArticleData {
-  title: string;
-  badge: string;
-  badgeColor: string;
-  date: string;
-  image: string;
-  body: string;
-}
-
 export default function BlogPage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [dbArticles, setDbArticles] = useState<any[]>([]);
+  const [seo, setSeo] = useState<any>(null);
 
   const toggleMenu = () => setMenuOpen(!menuOpen);
 
   useEffect(() => {
+    // Fetch data dinamis (SEO & Branding)
+    fetch("/api/landing")
+      .then((res) => res.json())
+      .then((res) => {
+        if (res.success && res.data && res.data.seo) {
+          setSeo(res.data.seo);
+        }
+      })
+      .catch((err) => console.error("Gagal mengambil data SEO:", err));
+
+    // Fetch artikel
     fetch("/api/articles")
       .then((res) => res.json())
       .then((res) => {
@@ -99,7 +102,7 @@ export default function BlogPage() {
       image: "https://image.qwenlm.ai/public_source/3524cccd-e29b-4d9f-9189-5394346ea852/1254e5187-8d09-4038-9944-a45fab0e7943.png",
       body: `
         <p class="mb-4">Ubud menyajikan keheningan dan keindahan budaya Bali yang autentik. Salah satu ikon terbaiknya adalah sawah bertingkat Tegalalang. Kehijauan sawah yang berundak indah bukan sekadar komoditas visual komersial, melainkan bagian dari sejarah panjang sistem pengairan <b>Subak</b>.</p>
-        <p class="mb-4">Subak adalah sebuah manifestasi filosofi masyarakat Hindu Bali, yaitu <i>Tri Hita Karana</i>, yang menekankan hubungan harmonis antara manusia dengan Tuhan, manusia dengan sesama, dan manusia dengan alam sekitarnya.</p>
+        <p class="mb-4">Subak adalah sebuah manifestasi filosofi masyarakat Hindu Bali, yaitu <i>Tri Hita Karana</i>, yang menekankan hubungan harmonis antara manusia dengan Tuhan, manusia dengan sesama, and manusia dengan alam sekitarnya.</p>
         <p class="mb-4">Datanglah pukul 06.00 WITA. Kabut tipis yang menyelimuti terasering berpadu dengan sorot cahaya emas matahari terbit menyajikan panorama magis yang tiada duanya. Anda juga dapat berbincang langsung dengan para petani lokal yang memelihara ekosistem sawah ini dengan cara-cara tradisional yang turun-temurun.</p>
       `
     },
@@ -117,7 +120,7 @@ export default function BlogPage() {
       body: `
         <p class="mb-4">Bepergian sendirian membutuhkan efisiensi mobilitas yang tinggi. Membawa koper besar saat berpindah pulau atau naik kapal kecil akan sangat merepotkan. Berikut adalah tips ringkas mengemas barang Anda:</p>
         <p class="mb-4"><b>1. Metode Gulung (Roll Folding)</b><br/>Menggulung baju alih-alih melipatnya akan meminimalkan lipatan kusut dan memangkas ruang koper hingga 30%.</p>
-        <p class="mb-4"><b>2. Formula 5-4-3-2-1</b><br/>Untuk trip 7 hari, cukup bawa 5 pasang pakaian dalam, 4 atasan kasual, 3 bawahan (celana/rok), 2 pasang sepatu nyaman (satu dipakai), dan 1 topi/aksesori pelindung panas.</p>
+        <p class="mb-4"><b>2. Formula 5-4-3-2-1</b><br/>Untuk trip 7 hari, cukup bawa 5 pasang pakaian dalam, 4 atasan kasual, 3 bawahan (celana/rok), 2 pasang sepatu nyaman (satu dipakai), and 1 topi/aksesori pelindung panas.</p>
         <p class="mb-4"><b>3. Pisahkan Botol Cairan Mini</b><br/>Selalu gunakan botol travel-size berukuran di bawah 100ml dan wadahi dalam tas transparan ziplock untuk mempermudah pemeriksaan bandara.</p>
       `
     }
@@ -129,9 +132,12 @@ export default function BlogPage() {
       <nav id="navbar" className="fixed top-0 left-0 right-0 z-50 transition-all duration-500 nav-scrolled h-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
           <div className="flex items-center justify-between h-full">
-            <Link href="/" className="flex items-center gap-2 group">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-600 to-accent-600 flex items-center justify-center font-bold text-xl text-white group-hover:scale-110 transition-transform">IO</div>
-              <span className="text-xl font-bold tracking-tight text-gray-900">Travel</span>
+            <Link href="/" className="flex items-center group">
+              {seo?.logoUrl ? (
+                <img src={seo.logoUrl} alt="Logo" className="h-15 w-auto object-contain transition-transform group-hover:scale-110" />
+              ) : (
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-600 to-accent-600 flex items-center justify-center font-bold text-xl text-white group-hover:scale-110 transition-transform">IO</div>
+              )}
             </Link>
             <div className="hidden md:flex items-center gap-8">
               <Link href="/#beranda" className="text-sm font-medium text-gray-600 hover:text-primary-600 transition-colors relative group">Beranda</Link>
@@ -224,7 +230,11 @@ export default function BlogPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-600 to-accent-600 flex items-center justify-center font-bold text-xl text-white">IO</div>
+                {seo?.logoUrl ? (
+                  <img src={seo.logoUrl} alt="Logo" className="h-10 w-auto object-contain" />
+                ) : (
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-600 to-accent-600 flex items-center justify-center font-bold text-xl text-white">IO</div>
+                )}
                 <span className="text-xl font-bold text-gray-900">Travel</span>
               </div>
               <p className="text-gray-500 text-sm leading-relaxed mb-6">Partner perjalanan terpercaya Anda sejak 2018.</p>

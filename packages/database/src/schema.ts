@@ -165,3 +165,25 @@ export const landingCta = pgTable('landing_cta', {
 
 export type DBLandingCta = typeof landingCta.$inferSelect;
 export type NewDBLandingCta = typeof landingCta.$inferInsert;
+
+// ==========================================
+// 11. TABEL SEO & BRANDING CONFIGURATION
+// ==========================================
+export const seoMeta = pgTable('seo_meta', {
+  id: text('id').primaryKey(), // Default: 'seo_config'
+  title: text('title').notNull(),
+  description: text('description').notNull(),
+  keywords: text('keywords').notNull(),
+  logoUrl: text('logo_url'),
+  faviconUrl: text('favicon_url'),
+  ogTitle: text('og_title'),
+  ogDescription: text('og_description'),
+  ogImage: text('og_image'),
+  twitterCard: text('twitter_card').default('summary_large_image'),
+  canonicalUrl: text('canonical_url'),
+  robots: text('robots').default('index, follow'),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export type DBSeoMeta = typeof seoMeta.$inferSelect;
+export type NewDBSeoMeta = typeof seoMeta.$inferInsert;

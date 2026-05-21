@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { db, users, eq } from '@adventure/database';
 import bcrypt from 'bcryptjs';
+import { signJWT } from '@/lib/auth';
+import { cookies } from 'next/headers';
 
 export const revalidate = 0;
 
@@ -37,7 +39,25 @@ export async function POST(request: Request) {
       }, { status: 401 });
     }
 
-    // 3. Login Sukses
+    // 3. Generate JWT Token
+    const token = await signJWT({
+      id: dbUser.id,
+      username: dbUser.username,
+      name: dbUser.name,
+      role: dbUser.role
+    });
+
+    // 4. Set Cookie
+    const cookieStore = await cookies();
+    cookieStore.set('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 60 * 60 * 2 // 2 hours
+    });
+
+    // 5. Login Sukses
     return NextResponse.json({
       success: true,
       message: 'Login berhasil!',

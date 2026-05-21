@@ -11,9 +11,10 @@ import {
   landingTestimonials, 
   landingFeatures, 
   landingCta, 
+  seoMeta,
   eq 
 } from '@adventure/database';
-import bcrypt from 'bcryptjs';
+import * as bcrypt from 'bcryptjs';
 
 export const revalidate = 0;
 
@@ -28,7 +29,8 @@ const tableMap: Record<string, any> = {
   team: landingTeam,
   testimonials: landingTestimonials,
   features: landingFeatures,
-  cta: landingCta
+  cta: landingCta,
+  meta: seoMeta
 };
 
 export async function GET(request: Request) {
@@ -76,7 +78,7 @@ export async function POST(request: Request) {
     }
 
     // Untuk tabel satu baris (single record config)
-    if (tableName === 'hero' || tableName === 'about' || tableName === 'cta') {
+    if (tableName === 'hero' || tableName === 'about' || tableName === 'cta' || tableName === 'meta') {
       const recordId = body.id || `${tableName}_content`;
       const existing = await db.select().from(tableSchema).where(eq(tableSchema.id, recordId));
       if (existing.length > 0) {

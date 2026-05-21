@@ -1,10 +1,39 @@
 @import "tailwindcss";
 
 :root {
-  --primary-500: #4f46e5; /* Royal Indigo */
-  --accent-500: #0d9488;  /* Vibrant Teal */
-  --background: #f8fafc;  /* Clean Ice Slate */
-  --foreground: #0f172a;  /* Deep Charcoal */
+  --primary-500: #D97A3A; /* Orange */
+  --primary-600: #C96A2E; /* Dark Orange */
+  --accent-500: #E3B53A;  /* Gold */
+  --accent-600: #F0C64A;  /* Light Gold */
+  --background: #F3F3F3;  /* Light Gray */
+  --foreground: #000000;  /* Black */
+}
+
+@theme {
+  --color-primary-500: var(--primary-500);
+  --color-primary-600: var(--primary-600);
+  --color-accent-500: var(--accent-500);
+  --color-accent-600: var(--accent-600);
+  
+  /* Map existing names if they are used widely */
+  --color-indigo-50: #FFF7ED;
+  --color-indigo-100: #FFEDD5;
+  --color-indigo-200: #FED7AA;
+  --color-indigo-300: #FDBA74;
+  --color-indigo-400: #FB923C;
+  --color-indigo-500: var(--primary-500);
+  --color-indigo-600: var(--primary-600);
+  --color-indigo-700: #B45309;
+  
+  --color-teal-50: #FEFCE8;
+  --color-teal-100: #FEF9C3;
+  --color-teal-200: #FEF08A;
+  --color-teal-500: var(--accent-500);
+  --color-teal-600: var(--accent-600);
+
+  --color-slate-50: var(--background);
+  --color-slate-100: #EAEAEA;
+  --color-slate-900: var(--foreground);
 }
 
 body {
@@ -35,7 +64,7 @@ body {
   background: rgba(255, 255, 255, 0.75);
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.5);
-  box-shadow: 0 10px 30px -10px rgba(79, 70, 229, 0.05);
+  box-shadow: 0 10px 30px -10px rgba(217, 122, 58, 0.05);
 }
 
 .glass-card {
@@ -47,10 +76,10 @@ body {
 }
 
 .glass-card:hover {
-  border-color: rgba(79, 70, 229, 0.2);
+  border-color: rgba(217, 122, 58, 0.2);
   background: rgba(255, 255, 255, 0.95);
   transform: translateY(-2px);
-  box-shadow: 0 20px 40px -15px rgba(79, 70, 229, 0.15);
+  box-shadow: 0 20px 40px -15px rgba(217, 122, 58, 0.15);
 }
 
 .gradient-text {
@@ -66,5 +95,5 @@ body {
 
 .gradient-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.35);
+  box-shadow: 0 10px 25px -5px rgba(217, 122, 58, 0.35);
 }

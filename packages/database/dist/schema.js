@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.landingCta = exports.landingFeatures = exports.landingTestimonials = exports.landingTeam = exports.landingAbout = exports.landingHero = exports.bookings = exports.tourPackages = exports.users = exports.articles = void 0;
+exports.seoMeta = exports.landingCta = exports.landingFeatures = exports.landingTestimonials = exports.landingTeam = exports.landingAbout = exports.landingHero = exports.bookings = exports.tourPackages = exports.users = exports.articles = void 0;
 const pg_core_1 = require("drizzle-orm/pg-core");
 // ==========================================
 // 1. TABEL ARTIKEL (BLOG)
@@ -126,5 +126,23 @@ exports.landingCta = (0, pg_core_1.pgTable)('landing_cta', {
     subtitle: (0, pg_core_1.text)('subtitle').notNull(),
     buttonText: (0, pg_core_1.text)('button_text').notNull(),
     buttonUrl: (0, pg_core_1.text)('button_url').notNull(),
+    updatedAt: (0, pg_core_1.timestamp)('updated_at').defaultNow().notNull(),
+});
+// ==========================================
+// 11. TABEL SEO & BRANDING CONFIGURATION
+// ==========================================
+exports.seoMeta = (0, pg_core_1.pgTable)('seo_meta', {
+    id: (0, pg_core_1.text)('id').primaryKey(), // Default: 'seo_config'
+    title: (0, pg_core_1.text)('title').notNull(),
+    description: (0, pg_core_1.text)('description').notNull(),
+    keywords: (0, pg_core_1.text)('keywords').notNull(),
+    logoUrl: (0, pg_core_1.text)('logo_url'),
+    faviconUrl: (0, pg_core_1.text)('favicon_url'),
+    ogTitle: (0, pg_core_1.text)('og_title'),
+    ogDescription: (0, pg_core_1.text)('og_description'),
+    ogImage: (0, pg_core_1.text)('og_image'),
+    twitterCard: (0, pg_core_1.text)('twitter_card').default('summary_large_image'),
+    canonicalUrl: (0, pg_core_1.text)('canonical_url'),
+    robots: (0, pg_core_1.text)('robots').default('index, follow'),
     updatedAt: (0, pg_core_1.timestamp)('updated_at').defaultNow().notNull(),
 });

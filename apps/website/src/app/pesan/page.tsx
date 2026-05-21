@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 
 interface BookingForm {
@@ -14,20 +14,15 @@ interface BookingForm {
 
 export default function PesanPage() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [dbPackages, setDbPackages] = useState<any[]>([]);
+  const [seo, setSeo] = useState<any>(null);
   const [form, setForm] = useState<BookingForm>({
     nama: "",
     email: "",
     telepon: "",
-    paket: "ubud",
+    paket: "",
     tanggal: "",
     tamu: 1
-  });
-
-  const [pricing, setPricing] = useState({
-    basePrice: 3500000,
-    subtotal: 3500000,
-    discount: 350000,
-    total: 3150000
   });
 
   const [bookingCode, setBookingCode] = useState("");
@@ -35,26 +30,40 @@ export default function PesanPage() {
 
   const toggleMenu = () => setMenuOpen(!menuOpen);
 
-  // Package base pricing table
-  const packagePrices: Record<string, number> = {
-    ubud: 3500000,
-    raja_ampat: 12000000,
-    labuan_bajo: 7500000
-  };
-
   useEffect(() => {
-    const base = packagePrices[form.paket] || 0;
+    // Fetch data dinamis (SEO & Packages)
+    fetch("/api/landing")
+      .then((res) => res.json())
+      .then((res) => {
+        if (res.success && res.data) {
+          if (res.data.seo) setSeo(res.data.seo);
+          if (res.data.packages) {
+            setDbPackages(res.data.packages);
+            // Set default package if not set
+            if (res.data.packages.length > 0) {
+              setForm(prev => ({ ...prev, paket: res.data.packages[0].id }));
+            }
+          }
+        }
+      })
+      .catch((err) => console.error("Gagal mengambil data landing:", err));
+  }, []);
+
+  // Derived pricing information
+  const pricing = useMemo(() => {
+    const selectedPkg = dbPackages.find(p => p.id === form.paket);
+    const base = selectedPkg ? selectedPkg.price : 0;
     const sub = base * form.tamu;
     const disc = Math.floor(sub * 0.1); // 10% automatic discount
     const tot = sub - disc;
 
-    setPricing({
+    return {
       basePrice: base,
       subtotal: sub,
       discount: disc,
       total: tot
-    });
-  }, [form.paket, form.tamu]);
+    };
+  }, [form.paket, form.tamu, dbPackages]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -74,17 +83,12 @@ export default function PesanPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.nama || !form.email || !form.telepon || !form.tanggal) {
+    if (!form.nama || !form.email || !form.telepon || !form.tanggal || !form.paket) {
       alert("Harap lengkapi seluruh formulir pemesanan!");
       return;
     }
 
-    // Map paket slug to human-readable names
-    const packageNames: Record<string, string> = {
-      ubud: "Ubud Culture & Nature Escape",
-      raja_ampat: "Raja Ampat Diving Expeditions",
-      labuan_bajo: "Labuan Bajo Islands Explorer"
-    };
+    const selectedPkg = dbPackages.find(p => p.id === form.paket);
 
     try {
       const response = await fetch("/api/bookings", {
@@ -93,7 +97,7 @@ export default function PesanPage() {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          packageName: packageNames[form.paket] || form.paket,
+          packageName: selectedPkg ? selectedPkg.name : form.paket,
           customerName: form.nama,
           customerEmail: form.email,
           customerPhone: form.telepon,
@@ -121,7 +125,7 @@ export default function PesanPage() {
       nama: "",
       email: "",
       telepon: "",
-      paket: "ubud",
+      paket: dbPackages.length > 0 ? dbPackages[0].id : "",
       tanggal: "",
       tamu: 1
     });
@@ -134,9 +138,12 @@ export default function PesanPage() {
       <nav id="navbar" className="fixed top-0 left-0 right-0 z-50 transition-all duration-500 nav-scrolled h-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
           <div className="flex items-center justify-between h-full">
-            <Link href="/" className="flex items-center gap-2 group">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-600 to-accent-600 flex items-center justify-center font-bold text-xl text-white group-hover:scale-110 transition-transform">IO</div>
-              <span className="text-xl font-bold tracking-tight text-gray-900">Travel</span>
+            <Link href="/" className="flex items-center group">
+              {seo?.logoUrl ? (
+                <img src={seo.logoUrl} alt="Logo" className="h-15 w-auto object-contain transition-transform group-hover:scale-110" />
+              ) : (
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-600 to-accent-600 flex items-center justify-center font-bold text-xl text-white group-hover:scale-110 transition-transform">IO</div>
+              )}
             </Link>
             <div className="hidden md:flex items-center gap-8">
               <Link href="/#beranda" className="text-sm font-medium text-gray-600 hover:text-primary-600 transition-colors relative group">Beranda</Link>
@@ -215,9 +222,17 @@ export default function PesanPage() {
                   <div>
                     <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Pilih Paket Destinasi</label>
                     <select name="paket" value={form.paket} onChange={handleChange} className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 border border-gray-200 focus:outline-none focus:border-primary-500 text-gray-900 font-medium transition-all">
-                      <option value="ubud">Ubud Culture & Nature Escape (4D3N)</option>
-                      <option value="raja_ampat">Raja Ampat Diving Expeditions (5D4N)</option>
-                      <option value="labuan_bajo">Labuan Bajo Islands Explorer (4D3N)</option>
+                      {dbPackages.length > 0 ? dbPackages.map((pkg) => (
+                        <option key={pkg.id} value={pkg.id}>
+                          {pkg.name} ({pkg.duration})
+                        </option>
+                      )) : (
+                        <>
+                          <option value="ubud">Ubud Culture & Nature Escape (4D3N)</option>
+                          <option value="raja_ampat">Raja Ampat Diving Expeditions (5D4N)</option>
+                          <option value="labuan_bajo">Labuan Bajo Islands Explorer (4D3N)</option>
+                        </>
+                      )}
                     </select>
                   </div>
                   <div>
@@ -275,7 +290,7 @@ export default function PesanPage() {
               </div>
 
               {/* Extra Perks Banner */}
-              <div className="mt-8 p-5 bg-gradient-to-br from-primary-500/5 to-accent-500/5 rounded-2xl border border-primary-500/10 flex items-start gap-4">
+              <div className="mt-8 p-5 bg-gradient-to-br from-primary-50 to-accent-50 rounded-2xl border border-primary-500/10 flex items-start gap-4">
                 <div className="w-10 h-10 rounded-xl bg-primary-100 text-primary-600 flex items-center justify-center flex-shrink-0">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
                 </div>
@@ -295,7 +310,11 @@ export default function PesanPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-600 to-accent-600 flex items-center justify-center font-bold text-xl text-white">IO</div>
+                {seo?.logoUrl ? (
+                  <img src={seo.logoUrl} alt="Logo" className="h-10 w-auto object-contain" />
+                ) : (
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-600 to-accent-600 flex items-center justify-center font-bold text-xl text-white">IO</div>
+                )}
                 <span className="text-xl font-bold text-gray-900">Travel</span>
               </div>
               <p className="text-gray-500 text-sm leading-relaxed mb-6">Partner perjalanan terpercaya Anda sejak 2018.</p>
@@ -336,12 +355,12 @@ export default function PesanPage() {
             {/* SVG Confetti Simulation Background */}
             <div className="absolute inset-0 pointer-events-none z-0 opacity-40">
               <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="50" cy="80" r="8" fill="#3b82f6" />
-                <rect x="150" y="40" width="12" height="12" fill="#d946ef" transform="rotate(45 150 40)" />
-                <polygon points="350,150 358,162 342,162" fill="#10b981" />
-                <rect x="250" y="200" width="10" height="15" fill="#f59e0b" transform="rotate(30 250 200)" />
-                <circle cx="80" cy="250" r="6" fill="#ec4899" />
-                <rect x="400" y="80" width="8" height="14" fill="#3b82f6" transform="rotate(15 400 80)" />
+                <circle cx="50" cy="80" r="8" fill="#D97A3A" />
+                <rect x="150" y="40" width="12" height="12" fill="#E3B53A" transform="rotate(45 150 40)" />
+                <polygon points="350,150 358,162 342,162" fill="#C96A2E" />
+                <rect x="250" y="200" width="10" height="15" fill="#F0C64A" transform="rotate(30 250 200)" />
+                <circle cx="80" cy="250" r="6" fill="#D97A3A" />
+                <rect x="400" y="80" width="8" height="14" fill="#E3B53A" transform="rotate(15 400 80)" />
               </svg>
             </div>
 

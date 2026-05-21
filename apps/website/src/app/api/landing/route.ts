@@ -1,5 +1,15 @@
 import { NextResponse } from 'next/server';
-import { createDb, landingHero, landingAbout, landingTeam, landingTestimonials, landingFeatures, landingCta, tourPackages } from '../../../lib/db';
+import { 
+  createDb, 
+  landingHero, 
+  landingAbout, 
+  landingTeam, 
+  landingTestimonials, 
+  landingFeatures, 
+  landingCta, 
+  tourPackages,
+  seoMeta 
+} from '../../../lib/db';
 import { eq } from 'drizzle-orm';
 
 export const revalidate = 0;
@@ -8,7 +18,7 @@ export async function GET() {
   try {
     const db = createDb();
 
-    const [heroData, aboutData, teamData, testimonialData, featureData, ctaData, packagesData] = await Promise.all([
+    const [heroData, aboutData, teamData, testimonialData, featureData, ctaData, packagesData, seoData] = await Promise.all([
       db.select().from(landingHero).limit(1),
       db.select().from(landingAbout).limit(1),
       db.select().from(landingTeam),
@@ -16,6 +26,7 @@ export async function GET() {
       db.select().from(landingFeatures),
       db.select().from(landingCta).limit(1),
       db.select().from(tourPackages).where(eq(tourPackages.status, 'PUBLISHED')),
+      db.select().from(seoMeta).limit(1),
     ]);
 
     return NextResponse.json({
@@ -28,6 +39,7 @@ export async function GET() {
         features: featureData,
         cta: ctaData[0] || null,
         packages: packagesData,
+        seo: seoData[0] || null,
       },
     });
 

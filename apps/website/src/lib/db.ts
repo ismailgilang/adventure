@@ -52,7 +52,7 @@ export const landingTestimonials = pgTable('landing_testimonials', {
   name: text('name').notNull(),
   role: text('role').notNull(),
   review: text('review').notNull(),
-  rating: integer('rating').default(5).notNull(),
+  rating: integer('rating').default(5),
   imageUrl: text('image_url'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
@@ -78,13 +78,12 @@ export const tourPackages = pgTable('tour_packages', {
   id: uuid('id').defaultRandom().primaryKey(),
   name: text('name').notNull(),
   slug: text('slug').unique().notNull(),
+  description: text('description'),
   price: integer('price').notNull(),
   duration: text('duration').notNull(),
-  description: text('description'),
   imageUrl: text('image_url'),
   status: text('status').default('DRAFT').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
 export const articles = pgTable('articles', {
@@ -95,21 +94,36 @@ export const articles = pgTable('articles', {
   imageUrl: text('image_url'),
   status: text('status').default('DRAFT').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
 export const bookings = pgTable('bookings', {
   id: uuid('id').defaultRandom().primaryKey(),
   bookingCode: text('booking_code').unique().notNull(),
-  packageName: text('package_name').notNull(),
   customerName: text('customer_name').notNull(),
   customerEmail: text('customer_email').notNull(),
   customerPhone: text('customer_phone').notNull(),
-  bookingDate: text('booking_date').notNull(),
+  packageId: uuid('package_id').notNull(),
+  packageName: text('package_name').notNull(),
   totalGuests: integer('total_guests').notNull(),
   totalPrice: integer('total_price').notNull(),
+  bookingDate: text('booking_date').notNull(),
   status: text('status').default('PENDING').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const seoMeta = pgTable('seo_meta', {
+  id: text('id').primaryKey(),
+  title: text('title').notNull(),
+  description: text('description').notNull(),
+  keywords: text('keywords'),
+  logoUrl: text('logo_url'),
+  faviconUrl: text('favicon_url'),
+  ogTitle: text('og_title'),
+  ogDescription: text('og_description'),
+  ogImage: text('og_image'),
+  twitterCard: text('twitter_card').default('summary_large_image'),
+  canonicalUrl: text('canonical_url'),
+  robots: text('robots').default('index, follow'),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
@@ -117,16 +131,26 @@ export const bookings = pgTable('bookings', {
 // DB factory — creates a fresh connection per request
 // Safe for Cloudflare Edge Runtime (no global state)
 // ==========================================
+
 export function createDb() {
-  const connectionString = process.env.DATABASE_URL;
-  if (!connectionString) {
-    throw new Error('DATABASE_URL is not defined');
+  const url = process.env.DATABASE_URL;
+  if (!url) {
+    throw new Error("DATABASE_URL is not defined");
   }
-  const sql = neon(connectionString);
-  return drizzle(sql, {
+  
+  const sql = neon(url);
+  return drizzle(sql, { 
     schema: {
-      landingHero, landingAbout, landingTeam, landingTestimonials,
-      landingFeatures, landingCta, tourPackages, articles, bookings,
-    },
+      landingHero,
+      landingAbout,
+      landingTeam,
+      landingTestimonials,
+      landingFeatures,
+      landingCta,
+      tourPackages,
+      articles,
+      bookings,
+      seoMeta
+    } 
   });
 }

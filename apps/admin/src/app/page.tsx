@@ -10,9 +10,10 @@ export default function AdminPage() {
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState("");
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [isCheckingSession, setIsCheckingSession] = useState(true);
 
   // Tab & content states
-  const [activeTab, setActiveTab] = useState<"dashboard" | "packages" | "articles" | "bookings" | "landing" | "users">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "packages" | "articles" | "bookings" | "landing" | "users" | "seo">("dashboard");
   const [activeLandingSubTab, setActiveLandingSubTab] = useState<"hero" | "about" | "features" | "testimonials" | "team" | "cta">("hero");
 
   // Database State Lists
@@ -24,10 +25,23 @@ export default function AdminPage() {
   const [features, setFeatures] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
 
-  // Config tables (Hero, About, CTA)
+  // Config tables (Hero, About, CTA, Meta)
   const [hero, setHero] = useState<any>({ title: "", subtitle: "", buttonText: "", imageUrl: "" });
   const [about, setAbout] = useState<any>({ title: "", subtitle: "", description: "", statsGuests: "", statsDestinations: "", statsGuides: "", imageUrl: "" });
   const [cta, setCta] = useState<any>({ title: "", subtitle: "", buttonText: "", buttonUrl: "" });
+  const [seo, setSeo] = useState<any>({ 
+    title: "", 
+    description: "", 
+    keywords: "", 
+    logoUrl: "", 
+    faviconUrl: "", 
+    ogTitle: "", 
+    ogDescription: "", 
+    ogImage: "", 
+    twitterCard: "summary_large_image",
+    canonicalUrl: "",
+    robots: "index, follow"
+  });
 
   // Modal control & Form States
   const [showAddModal, setShowAddModal] = useState(false);
@@ -58,7 +72,7 @@ export default function AdminPage() {
         return data.success ? data.data : [];
       };
 
-      const [pkgs, arts, bks, tm, test, feats, usrs, hr, ab, ct] = await Promise.all([
+      const [pkgs, arts, bks, tm, test, feats, usrs, hr, ab, ct, mt] = await Promise.all([
         getTable("packages"),
         getTable("articles"),
         getTable("bookings"),
@@ -69,6 +83,7 @@ export default function AdminPage() {
         getTable("hero"),
         getTable("about"),
         getTable("cta"),
+        getTable("meta"),
       ]);
 
       setPackages(pkgs || []);
@@ -82,11 +97,28 @@ export default function AdminPage() {
       if (hr && hr.length > 0) setHero(hr[0]);
       if (ab && ab.length > 0) setAbout(ab[0]);
       if (ct && ct.length > 0) setCta(ct[0]);
+      if (mt && mt.length > 0) setSeo(mt[0]);
 
     } catch (err) {
       console.error("Gagal memuat data dari database Neon:", err);
     }
   };
+
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const res = await fetch("/api/session");
+        if (res.ok) {
+          setIsLoggedIn(true);
+        }
+      } catch (err) {
+        console.error("Session check failed", err);
+      } finally {
+        setIsCheckingSession(false);
+      }
+    };
+    checkSession();
+  }, []);
 
   useEffect(() => {
     if (isLoggedIn) {
@@ -120,23 +152,31 @@ export default function AdminPage() {
     }
   };
 
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-    setUsername("");
-    setPassword("");
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/logout", { method: "POST" });
+      setIsLoggedIn(false);
+      setUsername("");
+      setPassword("");
+    } catch (err) {
+      console.error("Logout failed", err);
+      // Fallback
+      setIsLoggedIn(false);
+    }
   };
 
   // CRUD Operations handler
-  const handleSaveConfig = async (section: "hero" | "about" | "cta", payload: any) => {
+  const handleSaveConfig = async (section: "hero" | "about" | "cta" | "meta", payload: any) => {
     try {
-      const response = await fetch(`/api/crud?table=${section}`, {
+      const recordId = section === "meta" ? "seo_config" : `${section}_content`;
+      const response = await fetch(`/api/crud?table=${section === "meta" ? "meta" : section}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...payload, id: `${section}_content` })
+        body: JSON.stringify({ ...payload, id: recordId })
       });
       const res = await response.json();
       if (res.success) {
-        alert("Konfigurasi landing page berhasil disimpan!");
+        alert(`${section === "meta" ? "SEO & Branding" : "Konfigurasi landing page"} berhasil disimpan!`);
         loadAllData();
       } else {
         alert(res.message || "Gagal menyimpan konfigurasi.");
@@ -265,7 +305,16 @@ export default function AdminPage() {
     }
   };
 
-  // 1. Render Login Form if NOT logged in
+  // 1. Render Loading State if checking session
+  if (isCheckingSession) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  // 2. Render Login Form if NOT logged in
   if (!isLoggedIn) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-100 p-4 relative overflow-hidden">
@@ -329,7 +378,7 @@ export default function AdminPage() {
     );
   }
 
-  // 2. Render Main Admin Dashboard (Light Slate-Indigo Theme)
+  // 3. Render Main Admin Dashboard (Light Slate-Indigo Theme)
   return (
     <div className="min-h-screen flex bg-slate-50 text-slate-800 antialiased relative">
       {/* Sidebar Panel */}
@@ -406,6 +455,16 @@ export default function AdminPage() {
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
               <span>Akun Admin</span>
             </button>
+            <button
+              onClick={() => setActiveTab("seo")}
+              className={`w-full py-3 px-4 rounded-xl flex items-center gap-3 text-sm font-semibold transition-all cursor-pointer ${activeTab === "seo"
+                  ? "bg-indigo-50 text-indigo-600 border border-indigo-100 shadow-sm"
+                  : "text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-transparent"
+                }`}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" /></svg>
+              <span>SEO & Branding</span>
+            </button>
           </nav>
         </div>
 
@@ -440,6 +499,7 @@ export default function AdminPage() {
               {activeTab === "bookings" && "Kelola Data Pemesanan"}
               {activeTab === "landing" && "Kelola Konten Landing Page"}
               {activeTab === "users" && "Kelola Akun Administrator"}
+              {activeTab === "seo" && "SEO & Branding Settings"}
             </h1>
             <p className="text-sm text-slate-500 mt-1">
               Selamat datang kembali, Admin. Pantau dan kelola seluruh petualangan IO Travel Anda di sini.
@@ -970,6 +1030,92 @@ export default function AdminPage() {
                   ))}
                 </tbody>
               </table>
+            </div>
+          </div>
+        )}
+
+        {/* Tab 7: SEO & Branding */}
+        {activeTab === "seo" && (
+          <div className="space-y-8">
+            <div className="glass-card p-8 rounded-3xl space-y-10">
+              {/* 1. Basic SEO Section */}
+              <section className="space-y-6">
+                <h3 className="text-lg font-bold text-slate-800 border-b border-slate-100 pb-2">Konfigurasi Dasar SEO</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Meta Title Utama</label>
+                      <input type="text" value={seo.title || ""} onChange={(e) => setSeo({ ...seo, title: e.target.value })} placeholder="IO Travel - Jelajahi Surga Nusantara" className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-sm focus:border-indigo-500 outline-none" />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Meta Keywords (Koma)</label>
+                      <input type="text" value={seo.keywords || ""} onChange={(e) => setSeo({ ...seo, keywords: e.target.value })} placeholder="travel, liburan, bali, raja ampat" className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-sm focus:border-indigo-500 outline-none" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Meta Description</label>
+                    <textarea value={seo.description || ""} onChange={(e) => setSeo({ ...seo, description: e.target.value })} rows={5} placeholder="Deskripsi singkat website untuk hasil pencarian Google..." className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-sm focus:border-indigo-500 outline-none resize-none" />
+                  </div>
+                </div>
+              </section>
+
+              {/* 2. Branding Section */}
+              <section className="space-y-6">
+                <h3 className="text-lg font-bold text-slate-800 border-b border-slate-100 pb-2">Aset Branding (Logo & Favicon)</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <ImageUpload label="Logo Utama Website" value={seo.logoUrl || ""} onChange={(url) => setSeo({ ...seo, logoUrl: url })} section="branding" />
+                  <ImageUpload label="Favicon (Ikon Tab Browser)" value={seo.faviconUrl || ""} onChange={(url) => setSeo({ ...seo, faviconUrl: url })} section="branding" />
+                </div>
+              </section>
+
+              {/* 3. Social Media Sharing Section */}
+              <section className="space-y-6">
+                <h3 className="text-lg font-bold text-slate-800 border-b border-slate-100 pb-2">Social Media Sharing (Open Graph)</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">OG Title (Judul Sosmed)</label>
+                      <input type="text" value={seo.ogTitle || ""} onChange={(e) => setSeo({ ...seo, ogTitle: e.target.value })} className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-sm" />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">OG Description (Deskripsi Sosmed)</label>
+                      <textarea value={seo.ogDescription || ""} onChange={(e) => setSeo({ ...seo, ogDescription: e.target.value })} rows={3} className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-sm resize-none" />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Twitter Card Style</label>
+                      <select value={seo.twitterCard || ""} onChange={(e) => setSeo({ ...seo, twitterCard: e.target.value })} className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-sm">
+                        <option value="summary">Summary (Gambar Kecil)</option>
+                        <option value="summary_large_image">Summary Large Image (Gambar Besar)</option>
+                      </select>
+                    </div>
+                  </div>
+                  <ImageUpload label="OG Image (Gambar Preview Share)" value={seo.ogImage || ""} onChange={(url) => setSeo({ ...seo, ogImage: url })} section="seo-og" />
+                </div>
+              </section>
+
+              {/* 4. Technical SEO Section */}
+              <section className="space-y-6">
+                <h3 className="text-lg font-bold text-slate-800 border-b border-slate-100 pb-2">Pengaturan Teknis</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Canonical URL (URL Utama)</label>
+                    <input type="text" value={seo.canonicalUrl || ""} onChange={(e) => setSeo({ ...seo, canonicalUrl: e.target.value })} placeholder="https://iotravel.id" className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-sm" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Robots Instruction</label>
+                    <input type="text" value={seo.robots || ""} onChange={(e) => setSeo({ ...seo, robots: e.target.value })} placeholder="index, follow" className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-sm" />
+                  </div>
+                </div>
+              </section>
+
+              <div className="pt-6 border-t border-slate-100">
+                <button
+                  onClick={() => handleSaveConfig("meta", seo)}
+                  className="px-10 py-4 bg-gradient-to-r from-indigo-600 to-teal-500 text-white font-bold rounded-2xl shadow-lg hover:shadow-indigo-500/25 transition-all text-sm uppercase tracking-widest"
+                >
+                  Simpan Seluruh Metadata SEO
+                </button>
+              </div>
             </div>
           </div>
         )}
