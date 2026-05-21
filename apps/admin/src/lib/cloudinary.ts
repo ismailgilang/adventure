@@ -1,6 +1,19 @@
 export async function uploadImage(file: File, section: string) {
-  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-  const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+  let cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+  let uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+
+  // Jika variabel hardcoded (build-time) kosong, coba ambil dari API (runtime)
+  // Ini penting untuk Cloudflare karena NEXT_PUBLIC_ sering tidak masuk ke bundle browser
+  if (!cloudName || !uploadPreset) {
+    try {
+      const res = await fetch('/api/config');
+      const config = await res.json();
+      cloudName = config.cloudName;
+      uploadPreset = config.uploadPreset;
+    } catch (err) {
+      console.error("Gagal mengambil runtime config:", err);
+    }
+  }
 
   if (!cloudName || !uploadPreset) {
     console.error("Cloudinary Configuration Missing:", {
