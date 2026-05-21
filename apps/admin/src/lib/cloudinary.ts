@@ -3,7 +3,11 @@ export async function uploadImage(file: File, section: string) {
   const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
 
   if (!cloudName || !uploadPreset) {
-    throw new Error("Cloudinary configuration is missing in .env");
+    console.error("Cloudinary Configuration Missing:", {
+      cloudName: !!cloudName,
+      uploadPreset: !!uploadPreset
+    });
+    throw new Error(`Cloudinary configuration is missing in .env (${!cloudName ? 'NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ' : ''}${!uploadPreset ? 'NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET' : ''})`);
   }
 
   const formData = new FormData();
