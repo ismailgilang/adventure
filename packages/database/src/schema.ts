@@ -187,3 +187,39 @@ export const seoMeta = pgTable('seo_meta', {
 
 export type DBSeoMeta = typeof seoMeta.$inferSelect;
 export type NewDBSeoMeta = typeof seoMeta.$inferInsert;
+
+// ==========================================
+// 12. TABEL PROFILE PERUSAHAAN (COMPANY PROFILE)
+// ==========================================
+export const companyProfile = pgTable('company_profile', {
+  id: text('id').primaryKey(), // Default: 'company_config'
+  name: text('name'),
+  tagline: text('tagline'),
+  description: text('description'),
+  address: text('address'),
+  phone: text('phone'),
+  email: text('email'),
+  whatsapp: text('whatsapp'),
+  mapsUrl: text('maps_url'),
+  vision: text('vision'),
+  mission: text('mission'), // Disimpan sebagai JSON atau text panjang
+  history: text('description_history'),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+export type DBCompanyProfile = typeof companyProfile.$inferSelect;
+export type NewDBCompanyProfile = typeof companyProfile.$inferInsert;
+
+// ==========================================
+// 13. TABEL GALERI (GALLERY)
+// ==========================================
+export const gallery = pgTable('gallery', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  title: text('title').notNull(),
+  imageUrl: text('image_url').notNull(),
+  category: text('category').default('GENERAL').notNull(), // 'TOUR' | 'TEAM' | 'GENERAL'
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export type DBGallery = typeof gallery.$inferSelect;
+export type NewDBGallery = typeof gallery.$inferInsert;

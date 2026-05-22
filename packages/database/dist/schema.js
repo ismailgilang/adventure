@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.seoMeta = exports.landingCta = exports.landingFeatures = exports.landingTestimonials = exports.landingTeam = exports.landingAbout = exports.landingHero = exports.bookings = exports.tourPackages = exports.users = exports.articles = void 0;
+exports.gallery = exports.companyProfile = exports.seoMeta = exports.landingCta = exports.landingFeatures = exports.landingTestimonials = exports.landingTeam = exports.landingAbout = exports.landingHero = exports.bookings = exports.tourPackages = exports.users = exports.articles = void 0;
 const pg_core_1 = require("drizzle-orm/pg-core");
 // ==========================================
 // 1. TABEL ARTIKEL (BLOG)
@@ -145,4 +145,32 @@ exports.seoMeta = (0, pg_core_1.pgTable)('seo_meta', {
     canonicalUrl: (0, pg_core_1.text)('canonical_url'),
     robots: (0, pg_core_1.text)('robots').default('index, follow'),
     updatedAt: (0, pg_core_1.timestamp)('updated_at').defaultNow().notNull(),
+});
+// ==========================================
+// 12. TABEL PROFILE PERUSAHAAN (COMPANY PROFILE)
+// ==========================================
+exports.companyProfile = (0, pg_core_1.pgTable)('company_profile', {
+    id: (0, pg_core_1.text)('id').primaryKey(), // Default: 'company_config'
+    name: (0, pg_core_1.text)('name'),
+    tagline: (0, pg_core_1.text)('tagline'),
+    description: (0, pg_core_1.text)('description'),
+    address: (0, pg_core_1.text)('address'),
+    phone: (0, pg_core_1.text)('phone'),
+    email: (0, pg_core_1.text)('email'),
+    whatsapp: (0, pg_core_1.text)('whatsapp'),
+    mapsUrl: (0, pg_core_1.text)('maps_url'),
+    vision: (0, pg_core_1.text)('vision'),
+    mission: (0, pg_core_1.text)('mission'), // Disimpan sebagai JSON atau text panjang
+    history: (0, pg_core_1.text)('description_history'),
+    updatedAt: (0, pg_core_1.timestamp)('updated_at').defaultNow(),
+});
+// ==========================================
+// 13. TABEL GALERI (GALLERY)
+// ==========================================
+exports.gallery = (0, pg_core_1.pgTable)('gallery', {
+    id: (0, pg_core_1.uuid)('id').defaultRandom().primaryKey(),
+    title: (0, pg_core_1.text)('title').notNull(),
+    imageUrl: (0, pg_core_1.text)('image_url').notNull(),
+    category: (0, pg_core_1.text)('category').default('GENERAL').notNull(), // 'TOUR' | 'TEAM' | 'GENERAL'
+    createdAt: (0, pg_core_1.timestamp)('created_at').defaultNow().notNull(),
 });

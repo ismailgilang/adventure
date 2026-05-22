@@ -2,6 +2,10 @@
 
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
+import Navbar from "@/components/layout/Navbar";
+import MobileMenu from "@/components/layout/MobileMenu";
+import Footer from "@/components/layout/Footer";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 interface BookingForm {
   nama: string;
@@ -16,6 +20,8 @@ export default function PesanPage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [dbPackages, setDbPackages] = useState<any[]>([]);
   const [seo, setSeo] = useState<any>(null);
+  const [company, setCompany] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [form, setForm] = useState<BookingForm>({
     nama: "",
     email: "",
@@ -31,12 +37,14 @@ export default function PesanPage() {
   const toggleMenu = () => setMenuOpen(!menuOpen);
 
   useEffect(() => {
-    // Fetch data dinamis (SEO & Packages)
+    setLoading(true);
+    // Fetch data dinamis (SEO, Packages & Company)
     fetch("/api/landing")
       .then((res) => res.json())
       .then((res) => {
         if (res.success && res.data) {
           if (res.data.seo) setSeo(res.data.seo);
+          if (res.data.company) setCompany(res.data.company);
           if (res.data.packages) {
             setDbPackages(res.data.packages);
             // Set default package if not set
@@ -46,7 +54,8 @@ export default function PesanPage() {
           }
         }
       })
-      .catch((err) => console.error("Gagal mengambil data landing:", err));
+      .catch((err) => console.error("Gagal mengambil data landing:", err))
+      .finally(() => setLoading(false));
   }, []);
 
   // Derived pricing information
@@ -132,54 +141,12 @@ export default function PesanPage() {
     setShowModal(false);
   };
 
+  const brandName = company?.name || "IO Travel";
+
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 flex flex-col justify-between">
-      {/* Navbar */}
-      <nav id="navbar" className="fixed top-0 left-0 right-0 z-50 transition-all duration-500 nav-scrolled h-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
-          <div className="flex items-center justify-between h-full">
-            <Link href="/" className="flex items-center group">
-              {seo?.logoUrl ? (
-                <img src={seo.logoUrl} alt="Logo" className="h-15 w-auto object-contain transition-transform group-hover:scale-110" />
-              ) : (
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-600 to-accent-600 flex items-center justify-center font-bold text-xl text-white group-hover:scale-110 transition-transform">IO</div>
-              )}
-            </Link>
-            <div className="hidden md:flex items-center gap-8">
-              <Link href="/#beranda" className="text-sm font-medium text-gray-600 hover:text-primary-600 transition-colors relative group">Beranda</Link>
-              <Link href="/#tentang" className="text-sm font-medium text-gray-600 hover:text-primary-600 transition-colors relative group">Tentang Kami</Link>
-              <Link href="/#paket" className="text-sm font-medium text-gray-600 hover:text-primary-600 transition-colors relative group">Paket Wisata</Link>
-              <Link href="/#keunggulan" className="text-sm font-medium text-gray-600 hover:text-primary-600 transition-colors relative group">Keunggulan</Link>
-              <Link href="/#testimoni" className="text-sm font-medium text-gray-600 hover:text-primary-600 transition-colors relative group">Testimoni</Link>
-              <Link href="/#tim" className="text-sm font-medium text-gray-600 hover:text-primary-600 transition-colors relative group">Tim Kami</Link>
-              <Link href="/blog" className="text-sm font-medium text-gray-600 hover:text-primary-600 transition-colors relative group">Blog</Link>
-            </div>
-            <div className="hidden md:flex items-center gap-4">
-              <Link href="/pesan" className="px-6 py-2.5 bg-gradient-to-r from-primary-600 to-accent-600 rounded-full text-sm font-semibold text-white hover:shadow-lg hover:shadow-primary-500/25 transition-all">Pesan Sekarang</Link>
-            </div>
-            <button className="md:hidden w-10 h-10 flex items-center justify-center rounded-xl bg-gray-100" onClick={toggleMenu}>
-              <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
-            </button>
-          </div>
-        </div>
-      </nav>
-
-      {/* Mobile Menu */}
-      <div id="mobileMenu" className={`mobile-menu fixed top-0 right-0 h-full w-72 bg-white z-50 p-6 shadow-2xl ${menuOpen ? "open" : ""}`}>
-        <button onClick={toggleMenu} className="absolute top-5 right-5 w-10 h-10 flex items-center justify-center rounded-xl bg-gray-100"><svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
-        <div className="mt-16 flex flex-col gap-4">
-          <Link href="/#beranda" onClick={toggleMenu} className="text-lg font-medium text-gray-700 hover:text-primary-600 py-2 transition-colors">Beranda</Link>
-          <Link href="/#tentang" onClick={toggleMenu} className="text-lg font-medium text-gray-700 hover:text-primary-600 py-2 transition-colors">Tentang Kami</Link>
-          <Link href="/#paket" onClick={toggleMenu} className="text-lg font-medium text-gray-700 hover:text-primary-600 py-2 transition-colors">Paket Wisata</Link>
-          <Link href="/#keunggulan" onClick={toggleMenu} className="text-lg font-medium text-gray-700 hover:text-primary-600 py-2 transition-colors">Keunggulan</Link>
-          <Link href="/#testimoni" onClick={toggleMenu} className="text-lg font-medium text-gray-700 hover:text-primary-600 py-2 transition-colors">Testimoni</Link>
-          <Link href="/#tim" onClick={toggleMenu} className="text-lg font-medium text-gray-700 hover:text-primary-600 py-2 transition-colors">Tim Kami</Link>
-          <Link href="/blog" onClick={toggleMenu} className="text-lg font-medium text-gray-700 hover:text-primary-600 py-2 transition-colors">Blog</Link>
-          <hr className="border-gray-200 my-2"/>
-          <Link href="/pesan" onClick={toggleMenu} className="mt-2 px-6 py-3 bg-gradient-to-r from-primary-600 to-accent-600 rounded-full text-center text-sm font-semibold text-white">Pesan Sekarang</Link>
-        </div>
-      </div>
-      {menuOpen && <div className="fixed inset-0 bg-black/30 z-40" onClick={toggleMenu}></div>}
+      <Navbar navScrolled={true} seo={seo} company={company} toggleMenu={toggleMenu} />
+      <MobileMenu menuOpen={menuOpen} toggleMenu={toggleMenu} />
 
       {/* Main Reservation Portal */}
       <main className="flex-grow pt-32 pb-16">
@@ -194,159 +161,147 @@ export default function PesanPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            {/* Booking Form Card */}
-            <div className="lg:col-span-7 bg-white p-8 rounded-3xl border border-gray-100 shadow-xl">
-              <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span className="w-8 h-8 rounded-lg bg-primary-100 text-primary-600 flex items-center justify-center text-sm font-bold">1</span>
-                <span>Data Pemesan & Jadwal</span>
-              </h2>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div>
-                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Nama Lengkap</label>
-                  <input type="text" name="nama" value={form.nama} onChange={handleChange} required placeholder="Masukkan nama lengkap sesuai identitas..." className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 border border-gray-200 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 text-gray-900 transition-all"/>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Alamat Email</label>
-                    <input type="email" name="email" value={form.email} onChange={handleChange} required placeholder="contoh@domain.com" className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 border border-gray-200 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 text-gray-900 transition-all"/>
+          {loading ? (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+              <div className="lg:col-span-7 bg-white p-8 rounded-3xl border border-gray-100 shadow-xl space-y-8">
+                <Skeleton className="h-8 w-64" />
+                <div className="space-y-6">
+                  <Skeleton className="h-14 w-full rounded-2xl" />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <Skeleton className="h-14 w-full rounded-2xl" />
+                    <Skeleton className="h-14 w-full rounded-2xl" />
                   </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Nomor Telepon (WhatsApp)</label>
-                    <input type="tel" name="telepon" value={form.telepon} onChange={handleChange} required placeholder="0812xxxxxxxx" className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 border border-gray-200 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 text-gray-900 transition-all"/>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <Skeleton className="h-14 w-full rounded-2xl" />
+                    <Skeleton className="h-14 w-full rounded-2xl" />
                   </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Pilih Paket Destinasi</label>
-                    <select name="paket" value={form.paket} onChange={handleChange} className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 border border-gray-200 focus:outline-none focus:border-primary-500 text-gray-900 font-medium transition-all">
-                      {dbPackages.length > 0 ? dbPackages.map((pkg) => (
-                        <option key={pkg.id} value={pkg.id}>
-                          {pkg.name} ({pkg.duration})
-                        </option>
-                      )) : (
-                        <>
-                          <option value="ubud">Ubud Culture & Nature Escape (4D3N)</option>
-                          <option value="raja_ampat">Raja Ampat Diving Expeditions (5D4N)</option>
-                          <option value="labuan_bajo">Labuan Bajo Islands Explorer (4D3N)</option>
-                        </>
-                      )}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Tanggal Keberangkatan</label>
-                    <input type="date" name="tanggal" value={form.tanggal} onChange={handleChange} required className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 border border-gray-200 focus:outline-none focus:border-primary-500 text-gray-900 transition-all"/>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Jumlah Tamu (Orang)</label>
-                  <div className="flex items-center gap-4">
-                    <button type="button" onClick={() => setForm((prev) => ({ ...prev, tamu: Math.max(1, prev.tamu - 1) }))} className="w-12 h-12 rounded-xl border border-gray-200 hover:border-primary-500 flex items-center justify-center font-bold text-lg text-gray-700 bg-white transition-colors">-</button>
-                    <input type="number" name="tamu" value={form.tamu} onChange={handleChange} min="1" required className="w-16 h-12 border border-gray-200 rounded-xl text-center font-bold text-lg text-gray-900 bg-gray-50 focus:outline-none"/>
-                    <button type="button" onClick={() => setForm((prev) => ({ ...prev, tamu: prev.tamu + 1 }))} className="w-12 h-12 rounded-xl border border-gray-200 hover:border-primary-500 flex items-center justify-center font-bold text-lg text-gray-700 bg-white transition-colors">+</button>
-                  </div>
-                </div>
-
-                <button type="submit" className="w-full py-4 rounded-2xl bg-gradient-to-r from-primary-600 to-accent-600 text-white font-bold hover:shadow-lg hover:shadow-primary-500/25 transition-all text-center text-base">Konfirmasi & Pesan Sekarang</button>
-              </form>
-            </div>
-
-            {/* Pricing Summary Sidepanel */}
-            <div className="lg:col-span-5 bg-white p-8 rounded-3xl border border-gray-100 shadow-xl sticky top-28">
-              <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span className="w-8 h-8 rounded-lg bg-accent-100 text-accent-600 flex items-center justify-center text-sm font-bold">2</span>
-                <span>Rincian Pembayaran</span>
-              </h2>
-
-              <div className="space-y-4">
-                <div className="flex justify-between items-center text-sm text-gray-500">
-                  <span>Harga per pax</span>
-                  <span className="font-semibold text-gray-900">{formatRupiah(pricing.basePrice)}</span>
-                </div>
-                <div className="flex justify-between items-center text-sm text-gray-500">
-                  <span>Jumlah tamu</span>
-                  <span className="font-semibold text-gray-900">{form.tamu} Orang</span>
-                </div>
-                <hr className="border-gray-100"/>
-                <div className="flex justify-between items-center text-sm text-gray-500">
-                  <span>Subtotal</span>
-                  <span className="font-semibold text-gray-900">{formatRupiah(pricing.subtotal)}</span>
-                </div>
-                <div className="flex justify-between items-center text-sm text-green-600 font-medium">
-                  <span>Diskon Promo Web (10%)</span>
-                  <span>- {formatRupiah(pricing.discount)}</span>
-                </div>
-                <hr className="border-gray-100 my-2"/>
-                <div className="flex justify-between items-center">
-                  <div>
-                    <span className="text-sm font-bold text-gray-900 block">Total Pembayaran</span>
-                    <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Sudah termasuk PPN & Asuransi</span>
-                  </div>
-                  <span className="text-2xl font-extrabold text-primary-600">{formatRupiah(pricing.total)}</span>
+                  <Skeleton className="h-14 w-44 rounded-2xl" />
+                  <Skeleton className="h-16 w-full rounded-2xl" />
                 </div>
               </div>
-
-              {/* Extra Perks Banner */}
-              <div className="mt-8 p-5 bg-gradient-to-br from-primary-50 to-accent-50 rounded-2xl border border-primary-500/10 flex items-start gap-4">
-                <div className="w-10 h-10 rounded-xl bg-primary-100 text-primary-600 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+              <div className="lg:col-span-5 bg-white p-8 rounded-3xl border border-gray-100 shadow-xl space-y-8">
+                <Skeleton className="h-8 w-64" />
+                <div className="space-y-4">
+                  <Skeleton className="h-6 w-full" />
+                  <Skeleton className="h-6 w-full" />
+                  <Skeleton className="h-6 w-full" />
                 </div>
-                <div>
-                  <h4 className="text-sm font-bold text-gray-900 mb-1">Garansi Layanan Refund</h4>
-                  <p className="text-xs text-gray-500 leading-relaxed">Dapatkan refund 100% jika pembatalan dilakukan selambat-lambatnya 7 hari sebelum keberangkatan.</p>
+                <Skeleton className="h-[200px] w-full rounded-2xl" />
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+              {/* Booking Form Card */}
+              <div className="lg:col-span-7 bg-white p-8 rounded-3xl border border-gray-100 shadow-xl">
+                <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                  <span className="w-8 h-8 rounded-lg bg-primary-100 text-primary-600 flex items-center justify-center text-sm font-bold">1</span>
+                  <span>Data Pemesan & Jadwal</span>
+                </h2>
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Nama Lengkap</label>
+                    <input type="text" name="nama" value={form.nama} onChange={handleChange} required placeholder="Masukkan nama lengkap sesuai identitas..." className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 border border-gray-200 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 text-gray-900 transition-all"/>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Alamat Email</label>
+                      <input type="email" name="email" value={form.email} onChange={handleChange} required placeholder="contoh@domain.com" className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 border border-gray-200 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 text-gray-900 transition-all"/>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Nomor Telepon (WhatsApp)</label>
+                      <input type="tel" name="telepon" value={form.telepon} onChange={handleChange} required placeholder="0812xxxxxxxx" className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 border border-gray-200 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 text-gray-900 transition-all"/>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Pilih Paket Destinasi</label>
+                      <select name="paket" value={form.paket} onChange={handleChange} className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 border border-gray-200 focus:outline-none focus:border-primary-500 text-gray-900 font-medium transition-all">
+                        {dbPackages.length > 0 ? dbPackages.map((pkg) => (
+                          <option key={pkg.id} value={pkg.id}>
+                            {pkg.name} ({pkg.duration})
+                          </option>
+                        )) : (
+                          <>
+                            <option value="ubud">Ubud Culture & Nature Escape (4D3N)</option>
+                            <option value="raja_ampat">Raja Ampat Diving Expeditions (5D4N)</option>
+                            <option value="labuan_bajo">Labuan Bajo Islands Explorer (4D3N)</option>
+                          </>
+                        )}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Tanggal Keberangkatan</label>
+                      <input type="date" name="tanggal" value={form.tanggal} onChange={handleChange} required className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 border border-gray-200 focus:outline-none focus:border-primary-500 text-gray-900 transition-all"/>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Jumlah Tamu (Orang)</label>
+                    <div className="flex items-center gap-4">
+                      <button type="button" onClick={() => setForm((prev) => ({ ...prev, tamu: Math.max(1, prev.tamu - 1) }))} className="w-12 h-12 rounded-xl border border-gray-200 hover:border-primary-500 flex items-center justify-center font-bold text-lg text-gray-700 bg-white transition-colors">-</button>
+                      <input type="number" name="tamu" value={form.tamu} onChange={handleChange} min="1" required className="w-16 h-12 border border-gray-200 rounded-xl text-center font-bold text-lg text-gray-900 bg-gray-50 focus:outline-none"/>
+                      <button type="button" onClick={() => setForm((prev) => ({ ...prev, tamu: prev.tamu + 1 }))} className="w-12 h-12 rounded-xl border border-gray-200 hover:border-primary-500 flex items-center justify-center font-bold text-lg text-gray-700 bg-white transition-colors">+</button>
+                    </div>
+                  </div>
+
+                  <button type="submit" className="w-full py-4 rounded-2xl bg-gradient-to-r from-primary-600 to-accent-600 text-white font-bold hover:shadow-lg hover:shadow-primary-500/25 transition-all text-center text-base">Konfirmasi & Pesan Sekarang</button>
+                </form>
+              </div>
+
+              {/* Pricing Summary Sidepanel */}
+              <div className="lg:col-span-5 bg-white p-8 rounded-3xl border border-gray-100 shadow-xl sticky top-28">
+                <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                  <span className="w-8 h-8 rounded-lg bg-accent-100 text-accent-600 flex items-center justify-center text-sm font-bold">2</span>
+                  <span>Rincian Pembayaran</span>
+                </h2>
+
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center text-sm text-gray-500">
+                    <span>Harga per pax</span>
+                    <span className="font-semibold text-gray-900">{formatRupiah(pricing.basePrice)}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm text-gray-500">
+                    <span>Jumlah tamu</span>
+                    <span className="font-semibold text-gray-900">{form.tamu} Orang</span>
+                  </div>
+                  <hr className="border-gray-100"/>
+                  <div className="flex justify-between items-center text-sm text-gray-500">
+                    <span>Subtotal</span>
+                    <span className="font-semibold text-gray-900">{formatRupiah(pricing.subtotal)}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm text-green-600 font-medium">
+                    <span>Diskon Promo Web (10%)</span>
+                    <span>- {formatRupiah(pricing.discount)}</span>
+                  </div>
+                  <hr className="border-gray-100 my-2"/>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <span className="text-sm font-bold text-gray-900 block">Total Pembayaran</span>
+                      <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Sudah termasuk PPN & Asuransi</span>
+                    </div>
+                    <span className="text-2xl font-extrabold text-primary-600">{formatRupiah(pricing.total)}</span>
+                  </div>
+                </div>
+
+                {/* Extra Perks Banner */}
+                <div className="mt-8 p-5 bg-gradient-to-br from-primary-50 to-accent-50 rounded-2xl border border-primary-500/10 flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-primary-100 text-primary-600 flex items-center justify-center flex-shrink-0">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-gray-900 mb-1">Garansi Layanan Refund</h4>
+                    <p className="text-xs text-gray-500 leading-relaxed">Dapatkan refund 100% jika pembatalan dilakukan selambat-lambatnya 7 hari sebelum keberangkatan.</p>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="py-16 bg-white border-t border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                {seo?.logoUrl ? (
-                  <img src={seo.logoUrl} alt="Logo" className="h-10 w-auto object-contain" />
-                ) : (
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-600 to-accent-600 flex items-center justify-center font-bold text-xl text-white">IO</div>
-                )}
-                <span className="text-xl font-bold text-gray-900">Travel</span>
-              </div>
-              <p className="text-gray-500 text-sm leading-relaxed mb-6">Partner perjalanan terpercaya Anda sejak 2018.</p>
-            </div>
-            <div>
-              <h4 className="font-bold text-lg mb-4 text-gray-900">Destinasi</h4>
-              <ul className="space-y-3">
-                <li><Link href="/#paket" className="text-gray-500 hover:text-primary-600 transition-colors text-sm">Bali</Link></li>
-                <li><Link href="/#paket" className="text-gray-500 hover:text-primary-600 transition-colors text-sm">Raja Ampat</Link></li>
-                <li><Link href="/#paket" className="text-gray-500 hover:text-primary-600 transition-colors text-sm">Labuan Bajo</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-bold text-lg mb-4 text-gray-900">Layanan</h4>
-              <ul className="space-y-3">
-                <li><Link href="/#paket" className="text-gray-500 hover:text-primary-600 transition-colors text-sm">Paket Domestik</Link></li>
-                <li><Link href="/#paket" className="text-gray-500 hover:text-primary-600 transition-colors text-sm">Paket Internasional</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-bold text-lg mb-4 text-gray-900">Kontak</h4>
-              <ul className="space-y-3 text-sm text-gray-500">
-                <li>+62 812-3456-7890</li>
-                <li>hello@iotravel.id</li>
-              </ul>
-            </div>
-          </div>
-          <div className="pt-8 border-t border-gray-200 text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-gray-400 text-sm">© 2026 IO Travel. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
+      <Footer seo={seo} cta={{}} company={company} />
 
       {/* Confetti Booking Success Modal */}
       {showModal && (
@@ -375,7 +330,7 @@ export default function PesanPage() {
               </div>
 
               <div className="text-xs text-gray-400/80 bg-gray-50 p-4 rounded-2xl border border-gray-100">
-                Pihak Admin IO Travel akan menghubungi Anda melalui email <b>{form.email}</b> atau WhatsApp <b>{form.telepon}</b> dalam waktu 1x24 jam untuk verifikasi pembayaran.
+                Pihak Admin {brandName} akan menghubungi Anda melalui email <b>{form.email}</b> atau WhatsApp <b>{form.telepon}</b> dalam waktu 1x24 jam untuk verifikasi pembayaran.
               </div>
 
               <button onClick={resetForm} className="w-full py-4 rounded-2xl bg-gray-900 hover:bg-primary-600 text-white font-bold transition-all shadow-md">Tutup & Kembali</button>

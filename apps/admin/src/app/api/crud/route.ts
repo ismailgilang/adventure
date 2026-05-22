@@ -12,6 +12,8 @@ import {
   landingFeatures, 
   landingCta, 
   seoMeta,
+  companyProfile,
+  gallery,
   eq 
 } from '@adventure/database';
 import * as bcrypt from 'bcryptjs';
@@ -30,7 +32,9 @@ const tableMap: Record<string, any> = {
   testimonials: landingTestimonials,
   features: landingFeatures,
   cta: landingCta,
-  meta: seoMeta
+  meta: seoMeta,
+  company: companyProfile,
+  gallery
 };
 
 export async function GET(request: Request) {
@@ -39,7 +43,7 @@ export async function GET(request: Request) {
     const tableName = url.searchParams.get('table');
 
     if (!tableName || !tableMap[tableName]) {
-      return NextResponse.json({ success: false, message: 'Nama tabel tidak valid!' }, { status: 400 });
+      return NextResponse.json({ success: false, message: `Nama tabel "${tableName}" tidak valid!` }, { status: 400 });
     }
 
     const tableSchema = tableMap[tableName];
@@ -57,7 +61,7 @@ export async function POST(request: Request) {
     const tableName = url.searchParams.get('table');
 
     if (!tableName || !tableMap[tableName]) {
-      return NextResponse.json({ success: false, message: 'Nama tabel tidak valid!' }, { status: 400 });
+      return NextResponse.json({ success: false, message: `Nama tabel "${tableName}" tidak valid!` }, { status: 400 });
     }
 
     const body = await request.json();
@@ -78,8 +82,8 @@ export async function POST(request: Request) {
     }
 
     // Untuk tabel satu baris (single record config)
-    if (tableName === 'hero' || tableName === 'about' || tableName === 'cta' || tableName === 'meta') {
-      const recordId = body.id || `${tableName}_content`;
+    if (tableName === 'hero' || tableName === 'about' || tableName === 'cta' || tableName === 'meta' || tableName === 'company') {
+      const recordId = body.id || (tableName === 'company' ? 'company_config' : `${tableName}_content`);
       const existing = await db.select().from(tableSchema).where(eq(tableSchema.id, recordId));
       if (existing.length > 0) {
         const updated = await db.update(tableSchema)
@@ -110,7 +114,7 @@ export async function PUT(request: Request) {
     const id = url.searchParams.get('id');
 
     if (!tableName || !tableMap[tableName]) {
-      return NextResponse.json({ success: false, message: 'Nama tabel tidak valid!' }, { status: 400 });
+      return NextResponse.json({ success: false, message: `Nama tabel "${tableName}" tidak valid!` }, { status: 400 });
     }
 
     if (!id) {
@@ -151,7 +155,7 @@ export async function DELETE(request: Request) {
     const id = url.searchParams.get('id');
 
     if (!tableName || !tableMap[tableName]) {
-      return NextResponse.json({ success: false, message: 'Nama tabel tidak valid!' }, { status: 400 });
+      return NextResponse.json({ success: false, message: `Nama tabel "${tableName}" tidak valid!` }, { status: 400 });
     }
 
     if (!id) {

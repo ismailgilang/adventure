@@ -17,6 +17,45 @@ const drizzle = getExport(neonHttp, 'drizzle');
 // Schema (inline, edge-safe — no CJS interop)
 // ==========================================
 
+export const articles = pgTable('articles', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  title: text('title').notNull(),
+  slug: text('slug').unique().notNull(),
+  content: text('content').notNull(),
+  imageUrl: text('image_url'),
+  status: text('status').default('DRAFT').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const tourPackages = pgTable('tour_packages', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  name: text('name').notNull(),
+  slug: text('slug').unique().notNull(),
+  description: text('description'),
+  price: integer('price').notNull(),
+  duration: text('duration').notNull(),
+  imageUrl: text('image_url'),
+  status: text('status').default('DRAFT').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const bookings = pgTable('bookings', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  bookingCode: text('booking_code').unique().notNull(),
+  customerName: text('customer_name').notNull(),
+  customerEmail: text('customer_email').notNull(),
+  customerPhone: text('customer_phone').notNull(),
+  packageId: uuid('package_id').notNull(),
+  packageName: text('package_name').notNull(),
+  totalGuests: integer('total_guests').notNull(),
+  totalPrice: integer('total_price').notNull(),
+  bookingDate: text('booking_date').notNull(),
+  status: text('status').default('PENDING').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
 export const landingHero = pgTable('landing_hero', {
   id: text('id').primaryKey(),
   title: text('title').notNull(),
@@ -74,43 +113,6 @@ export const landingCta = pgTable('landing_cta', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
-export const tourPackages = pgTable('tour_packages', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  name: text('name').notNull(),
-  slug: text('slug').unique().notNull(),
-  description: text('description'),
-  price: integer('price').notNull(),
-  duration: text('duration').notNull(),
-  imageUrl: text('image_url'),
-  status: text('status').default('DRAFT').notNull(),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-});
-
-export const articles = pgTable('articles', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  title: text('title').notNull(),
-  slug: text('slug').unique().notNull(),
-  content: text('content').notNull(),
-  imageUrl: text('image_url'),
-  status: text('status').default('DRAFT').notNull(),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-});
-
-export const bookings = pgTable('bookings', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  bookingCode: text('booking_code').unique().notNull(),
-  customerName: text('customer_name').notNull(),
-  customerEmail: text('customer_email').notNull(),
-  customerPhone: text('customer_phone').notNull(),
-  packageId: uuid('package_id').notNull(),
-  packageName: text('package_name').notNull(),
-  totalGuests: integer('total_guests').notNull(),
-  totalPrice: integer('total_price').notNull(),
-  bookingDate: text('booking_date').notNull(),
-  status: text('status').default('PENDING').notNull(),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-});
-
 export const seoMeta = pgTable('seo_meta', {
   id: text('id').primaryKey(),
   title: text('title').notNull(),
@@ -127,6 +129,32 @@ export const seoMeta = pgTable('seo_meta', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
+export const companyProfile = pgTable('company_profile', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  tagline: text('tagline'),
+  description: text('description').notNull(),
+  address: text('address').notNull(),
+  phone: text('phone').notNull(),
+  email: text('email').notNull(),
+  whatsapp: text('whatsapp'),
+  mapsUrl: text('maps_url'),
+  vision: text('vision'),
+  mission: text('mission'),
+  history: text('description_history'),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const gallery = pgTable('gallery', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  title: text('title').notNull(),
+  imageUrl: text('image_url').notNull(),
+  category: text('category').default('GENERAL').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export type DBArticle = typeof articles.$inferSelect;
+
 // ==========================================
 // DB factory — creates a fresh connection per request
 // Safe for Cloudflare Edge Runtime (no global state)
@@ -141,16 +169,18 @@ export function createDb() {
   const sql = neon(url);
   return drizzle(sql, { 
     schema: {
+      articles,
+      tourPackages,
+      bookings,
       landingHero,
       landingAbout,
       landingTeam,
       landingTestimonials,
       landingFeatures,
       landingCta,
-      tourPackages,
-      articles,
-      bookings,
-      seoMeta
+      seoMeta,
+      companyProfile,
+      gallery
     } 
   });
 }

@@ -13,7 +13,7 @@ export default function AdminPage() {
   const [isCheckingSession, setIsCheckingSession] = useState(true);
 
   // Tab & content states
-  const [activeTab, setActiveTab] = useState<"dashboard" | "packages" | "articles" | "bookings" | "landing" | "users" | "seo">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "packages" | "articles" | "bookings" | "landing" | "company" | "gallery" | "users" | "seo">("dashboard");
   const [activeLandingSubTab, setActiveLandingSubTab] = useState<"hero" | "about" | "features" | "testimonials" | "team" | "cta">("hero");
 
   // Database State Lists
@@ -24,8 +24,9 @@ export default function AdminPage() {
   const [testimonials, setTestimonials] = useState<any[]>([]);
   const [features, setFeatures] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
+  const [gallery, setGallery] = useState<any[]>([]);
 
-  // Config tables (Hero, About, CTA, Meta)
+  // Config tables (Hero, About, CTA, Meta, Company)
   const [hero, setHero] = useState<any>({ title: "", subtitle: "", buttonText: "", imageUrl: "" });
   const [about, setAbout] = useState<any>({ title: "", subtitle: "", description: "", statsGuests: "", statsDestinations: "", statsGuides: "", imageUrl: "" });
   const [cta, setCta] = useState<any>({ title: "", subtitle: "", buttonText: "", buttonUrl: "" });
@@ -42,11 +43,24 @@ export default function AdminPage() {
     canonicalUrl: "",
     robots: "index, follow"
   });
+  const [company, setCompany] = useState<any>({
+    name: "",
+    tagline: "",
+    description: "",
+    address: "",
+    phone: "",
+    email: "",
+    whatsapp: "",
+    mapsUrl: "",
+    vision: "",
+    mission: "",
+    history: ""
+  });
 
   // Modal control & Form States
   const [showAddModal, setShowAddModal] = useState(false);
   const [editItem, setEditItem] = useState<any | null>(null);
-  const [modalType, setModalType] = useState<"packages" | "articles" | "team" | "testimonials" | "features" | "users" | null>(null);
+  const [modalType, setModalType] = useState<"packages" | "articles" | "team" | "testimonials" | "features" | "users" | "gallery" | null>(null);
 
   // Form input bindings
   const [pkgForm, setPkgForm] = useState({ name: "", price: 0, duration: "", description: "", imageUrl: "", status: "DRAFT" });
@@ -55,6 +69,7 @@ export default function AdminPage() {
   const [testForm, setTestForm] = useState({ name: "", role: "", review: "", rating: 5, imageUrl: "" });
   const [featForm, setFeatForm] = useState({ title: "", description: "", icon: "compass" });
   const [userForm, setUserForm] = useState({ username: "", password: "", name: "", role: "ADMIN" });
+  const [galleryForm, setGalleryForm] = useState({ title: "", imageUrl: "", category: "GENERAL" });
 
   const formatRupiah = (val: number) => {
     return new Intl.NumberFormat("id-ID", {
@@ -72,7 +87,7 @@ export default function AdminPage() {
         return data.success ? data.data : [];
       };
 
-      const [pkgs, arts, bks, tm, test, feats, usrs, hr, ab, ct, mt] = await Promise.all([
+      const [pkgs, arts, bks, tm, test, feats, usrs, hr, ab, ct, mt, comp, gal] = await Promise.all([
         getTable("packages"),
         getTable("articles"),
         getTable("bookings"),
@@ -84,6 +99,8 @@ export default function AdminPage() {
         getTable("about"),
         getTable("cta"),
         getTable("meta"),
+        getTable("company"),
+        getTable("gallery"),
       ]);
 
       setPackages(pkgs || []);
@@ -93,11 +110,13 @@ export default function AdminPage() {
       setTestimonials(test || []);
       setFeatures(feats || []);
       setUsers(usrs || []);
+      setGallery(gal || []);
 
       if (hr && hr.length > 0) setHero(hr[0]);
       if (ab && ab.length > 0) setAbout(ab[0]);
       if (ct && ct.length > 0) setCta(ct[0]);
       if (mt && mt.length > 0) setSeo(mt[0]);
+      if (comp && comp.length > 0) setCompany(comp[0]);
 
     } catch (err) {
       console.error("Gagal memuat data dari database Neon:", err);
@@ -166,9 +185,9 @@ export default function AdminPage() {
   };
 
   // CRUD Operations handler
-  const handleSaveConfig = async (section: "hero" | "about" | "cta" | "meta", payload: any) => {
+  const handleSaveConfig = async (section: "hero" | "about" | "cta" | "meta" | "company", payload: any) => {
     try {
-      const recordId = section === "meta" ? "seo_config" : `${section}_content`;
+      const recordId = section === "meta" ? "seo_config" : section === "company" ? "company_config" : `${section}_content`;
       const response = await fetch(`/api/crud?table=${section === "meta" ? "meta" : section}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -176,7 +195,7 @@ export default function AdminPage() {
       });
       const res = await response.json();
       if (res.success) {
-        alert(`${section === "meta" ? "SEO & Branding" : "Konfigurasi landing page"} berhasil disimpan!`);
+        alert(`${section === "meta" ? "SEO & Branding" : section === "company" ? "Profil Perusahaan" : "Konfigurasi landing page"} berhasil disimpan!`);
         loadAllData();
       } else {
         alert(res.message || "Gagal menyimpan konfigurasi.");
@@ -246,6 +265,7 @@ export default function AdminPage() {
     setTestForm({ name: "", role: "", review: "", rating: 5, imageUrl: "" });
     setFeatForm({ title: "", description: "", icon: "compass" });
     setUserForm({ username: "", password: "", name: "", role: "ADMIN" });
+    setGalleryForm({ title: "", imageUrl: "", category: "GENERAL" });
     setShowAddModal(true);
   };
 
@@ -257,6 +277,7 @@ export default function AdminPage() {
     if (type === "team") setTeamForm({ ...item });
     if (type === "testimonials") setTestForm({ ...item });
     if (type === "features") setFeatForm({ ...item });
+    if (type === "gallery") setGalleryForm({ ...item });
     if (type === "users") setUserForm({ ...item, password: "" }); // Jangan pasang hashed password
     setShowAddModal(true);
   };
@@ -270,6 +291,7 @@ export default function AdminPage() {
     if (modalType === "team") payload = teamForm;
     if (modalType === "testimonials") payload = testForm;
     if (modalType === "features") payload = featForm;
+    if (modalType === "gallery") payload = galleryForm;
     if (modalType === "users") {
       payload = { ...userForm };
       if (!payload.password && editItem) {
@@ -435,6 +457,33 @@ export default function AdminPage() {
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
               <span>Data Booking</span>
             </button>
+
+            <div className="pt-4 pb-2">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-4">Master Data</span>
+            </div>
+
+            <button
+              onClick={() => setActiveTab("company")}
+              className={`w-full py-3 px-4 rounded-xl flex items-center gap-3 text-sm font-semibold transition-all cursor-pointer ${activeTab === "company"
+                  ? "bg-indigo-50 text-indigo-600 border border-indigo-100 shadow-sm"
+                  : "text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-transparent"
+                }`}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+              <span>Profil Perusahaan</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab("gallery")}
+              className={`w-full py-3 px-4 rounded-xl flex items-center gap-3 text-sm font-semibold transition-all cursor-pointer ${activeTab === "gallery"
+                  ? "bg-indigo-50 text-indigo-600 border border-indigo-100 shadow-sm"
+                  : "text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-transparent"
+                }`}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+              <span>Galeri Foto</span>
+            </button>
+
             <button
               onClick={() => setActiveTab("landing")}
               className={`w-full py-3 px-4 rounded-xl flex items-center gap-3 text-sm font-semibold transition-all cursor-pointer ${activeTab === "landing"
@@ -498,6 +547,8 @@ export default function AdminPage() {
               {activeTab === "articles" && "Kelola Artikel Blog"}
               {activeTab === "bookings" && "Kelola Data Pemesanan"}
               {activeTab === "landing" && "Kelola Konten Landing Page"}
+              {activeTab === "company" && "Kelola Profil Perusahaan"}
+              {activeTab === "gallery" && "Kelola Galeri Foto"}
               {activeTab === "users" && "Kelola Akun Administrator"}
               {activeTab === "seo" && "SEO & Branding Settings"}
             </h1>
@@ -773,6 +824,116 @@ export default function AdminPage() {
                 </tbody>
               </table>
             </div>
+          </div>
+        )}
+
+        {/* Tab: Company Profile */}
+        {activeTab === "company" && (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <span className="text-slate-500 text-sm">Konfigurasi Identitas & Informasi Perusahaan</span>
+            </div>
+            <form onSubmit={(e) => { e.preventDefault(); handleSaveConfig("company", company); }} className="space-y-8 glass-card p-8 rounded-3xl">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                <div className="space-y-6">
+                  <h3 className="text-xl font-bold text-slate-800 border-b border-slate-100 pb-3">Informasi Identitas</h3>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Nama Perusahaan</label>
+                    <input type="text" value={company.name} onChange={(e) => setCompany({ ...company, name: e.target.value })} required className="w-full px-5 py-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 text-sm focus:border-indigo-500 outline-none transition-all" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Tagline / Slogan</label>
+                    <input type="text" value={company.tagline} onChange={(e) => setCompany({ ...company, tagline: e.target.value })} className="w-full px-5 py-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 text-sm focus:border-indigo-500 outline-none transition-all" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Deskripsi Umum</label>
+                    <textarea value={company.description} onChange={(e) => setCompany({ ...company, description: e.target.value })} rows={4} required className="w-full px-5 py-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 text-sm focus:border-indigo-500 outline-none transition-all resize-none" />
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  <h3 className="text-xl font-bold text-slate-800 border-b border-slate-100 pb-3">Kontak & Lokasi</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Email</label>
+                      <input type="email" value={company.email} onChange={(e) => setCompany({ ...company, email: e.target.value })} required className="w-full px-5 py-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 text-sm" />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Telepon</label>
+                      <input type="text" value={company.phone} onChange={(e) => setCompany({ ...company, phone: e.target.value })} required className="w-full px-5 py-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 text-sm" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">WhatsApp Number</label>
+                    <input type="text" value={company.whatsapp} onChange={(e) => setCompany({ ...company, whatsapp: e.target.value })} placeholder="e.g. 62812345678" className="w-full px-5 py-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 text-sm" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Alamat Kantor</label>
+                    <textarea value={company.address} onChange={(e) => setCompany({ ...company, address: e.target.value })} rows={2} required className="w-full px-5 py-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 text-sm resize-none" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Google Maps Embed/URL</label>
+                    <input type="text" value={company.mapsUrl} onChange={(e) => setCompany({ ...company, mapsUrl: e.target.value })} className="w-full px-5 py-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 text-sm" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <h3 className="text-xl font-bold text-slate-800 border-b border-slate-100 pb-3">Visi, Misi & Sejarah</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Visi Perusahaan</label>
+                    <textarea value={company.vision} onChange={(e) => setCompany({ ...company, vision: e.target.value })} rows={4} className="w-full px-5 py-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 text-sm resize-none" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Misi Perusahaan</label>
+                    <textarea value={company.mission} onChange={(e) => setCompany({ ...company, mission: e.target.value })} rows={4} placeholder="Gunakan baris baru untuk setiap poin misi..." className="w-full px-5 py-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 text-sm resize-none" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Sejarah Singkat (History)</label>
+                  <textarea value={company.history} onChange={(e) => setCompany({ ...company, history: e.target.value })} rows={6} className="w-full px-5 py-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 text-sm resize-none" />
+                </div>
+              </div>
+
+              <div className="pt-6 border-t border-slate-100 text-right">
+                <button type="submit" className="px-10 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl shadow-lg transition-all text-sm uppercase tracking-widest">
+                  Simpan Profil Perusahaan
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* Tab: Gallery */}
+        {activeTab === "gallery" && (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <span className="text-slate-500 text-sm">Kelola Koleksi Foto Petualangan</span>
+              <button onClick={() => handleOpenAdd("gallery")} className="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-sm font-semibold text-white shadow-md cursor-pointer">+ Tambah Foto Galeri</button>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {gallery.map((img) => (
+                <div key={img.id} className="group relative glass-card rounded-3xl overflow-hidden aspect-square border border-slate-200">
+                  <img src={img.imageUrl} alt={img.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-5">
+                    <span className="text-[10px] font-bold text-indigo-300 uppercase tracking-widest mb-1">{img.category}</span>
+                    <h4 className="text-white font-bold text-sm leading-tight mb-4">{img.title}</h4>
+                    <div className="flex gap-2">
+                      <button onClick={() => handleOpenEdit("gallery", img)} className="flex-1 py-2 bg-white/20 hover:bg-white/40 backdrop-blur-md text-white text-[10px] font-bold rounded-xl transition-colors">Ubah</button>
+                      <button onClick={() => handleDelete("gallery", img.id)} className="flex-1 py-2 bg-red-500/60 hover:bg-red-50 text-white text-[10px] font-bold rounded-xl transition-colors">Hapus</button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {gallery.length === 0 && (
+              <div className="py-20 text-center glass-card rounded-3xl border border-dashed border-slate-300">
+                <span className="text-slate-400 text-sm">Belum ada koleksi foto. Mulai unggah momen petualangan Anda!</span>
+              </div>
+            )}
           </div>
         )}
 
@@ -1271,6 +1432,29 @@ export default function AdminPage() {
                   <div>
                     <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Deskripsi Penjelasan Poin</label>
                     <textarea value={featForm.description} onChange={(e) => setFeatForm({ ...featForm, description: e.target.value })} required rows={4} className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-sm resize-none" />
+                  </div>
+                </>
+              )}
+
+              {/* Gallery Form fields */}
+              {modalType === "gallery" && (
+                <>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Keterangan / Judul Foto</label>
+                    <input type="text" value={galleryForm.title} onChange={(e) => setGalleryForm({ ...galleryForm, title: e.target.value })} required placeholder="e.g. Keindahan Pantai Kelingking" className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-sm" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <ImageUpload label="URL Foto Galeri" value={galleryForm.imageUrl || ""} onChange={(url) => setGalleryForm({ ...galleryForm, imageUrl: url })} section="gallery" />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Kategori Foto</label>
+                      <select value={galleryForm.category} onChange={(e) => setGalleryForm({ ...galleryForm, category: e.target.value })} className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-sm">
+                        <option value="TOUR">TOUR (Wisata)</option>
+                        <option value="TEAM">TEAM (Kegiatan Tim)</option>
+                        <option value="GENERAL">GENERAL (Umum)</option>
+                      </select>
+                    </div>
                   </div>
                 </>
               )}
