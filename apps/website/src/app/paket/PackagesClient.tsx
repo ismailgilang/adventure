@@ -26,10 +26,8 @@ export default function PackagesClient({
     slug: pkg.slug,
     category: ((pkg.slug && pkg.slug.includes("ubud")) || (pkg.name && pkg.name.toLowerCase().includes("ubud"))) ? "budaya" : "petualangan",
     duration: pkg.duration,
-    price: new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(pkg.price),
+    price: pkg.price > 0 ? new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(pkg.price) : null,
     image: pkg.imageUrl || "https://image.qwenlm.ai/public_source/3524cccd-e29b-4d9f-9189-5394346ea852/1254e5187-8d09-4038-9944-a45fab0e7943.png",
-    badge: pkg.price > 8000000 ? "Premium Trip" : "Terlaris",
-    badgeColor: pkg.price > 8000000 ? "bg-accent-600/90" : "bg-primary-600/90"
   }));
 
   return (
@@ -62,9 +60,6 @@ export default function PackagesClient({
               >
                 <Link href={`/paket/${p.slug || p.id}`} className="block relative h-64 overflow-hidden bg-gray-100">
                   <img src={p.image} alt={p.title} className="w-full h-full object-cover transition-transform duration-500 hover:scale-110" />
-                  <span className={`absolute top-4 left-4 px-3 py-1 ${p.badgeColor} rounded-full text-xs font-bold text-white`}>
-                    {p.badge}
-                  </span>
                 </Link>
                 <div className="p-8">
                   <span className="text-gray-400 text-xs font-semibold uppercase tracking-wider block mb-2">
@@ -76,10 +71,14 @@ export default function PackagesClient({
                   
                   <div className="flex flex-col gap-4 border-t border-gray-100 pt-4">
                     <div className="flex items-center justify-between">
-                      <div>
-                        <span className="text-gray-400 text-[10px] uppercase font-bold block">Mulai dari</span>
-                        <span className="text-lg font-extrabold text-primary-600">{p.price}</span>
-                      </div>
+                      {p.price ? (
+                        <div>
+                          <span className="text-gray-400 text-[10px] uppercase font-bold block">Mulai dari</span>
+                          <span className="text-lg font-extrabold text-primary-600">{p.price}</span>
+                        </div>
+                      ) : (
+                        <div className="h-10"></div>
+                      )}
                       <Link
                         href={`/paket/${p.slug || p.id}`}
                         className="px-5 py-2 bg-gray-100 text-gray-700 rounded-full text-xs font-bold hover:bg-primary-100 hover:text-primary-600 transition-colors"

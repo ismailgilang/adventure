@@ -141,7 +141,7 @@ export default function PesanPage() {
     setShowModal(false);
   };
 
-  const brandName = company?.name || "IO Travel";
+  const brandName = company?.name || "Villa Situ Cileunca";
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 flex flex-col justify-between">

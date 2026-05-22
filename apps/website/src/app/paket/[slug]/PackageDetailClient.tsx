@@ -31,11 +31,11 @@ export default function PackageDetailClient({ pkg, seo, company, recommended }: 
 
   if (!pkg) return null;
 
-  const priceFormatted = new Intl.NumberFormat("id-ID", {
+  const priceFormatted = pkg.price > 0 ? new Intl.NumberFormat("id-ID", {
     style: "currency",
     currency: "IDR",
     maximumFractionDigits: 0
-  }).format(pkg.price);
+  }).format(pkg.price) : null;
 
   const waNumber = company?.whatsapp ? company.whatsapp.replace(/[^0-9]/g, "") : "628123456789";
 
@@ -58,9 +58,6 @@ export default function PackageDetailClient({ pkg, seo, company, recommended }: 
             <div className="lg:col-span-7 space-y-8 animate-fade-in">
               <div className="space-y-4">
                 <div className="flex items-center gap-4 text-xs font-bold text-gray-400">
-                  <span className={`px-3 py-1 rounded-full text-xs font-bold text-white ${pkg.price > 8000000 ? "bg-accent-600" : "bg-primary-600"}`}>
-                    {pkg.price > 8000000 ? "Premium Trip" : "Terlaris"}
-                  </span>
                   <span>{pkg.duration}</span>
                 </div>
                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 leading-tight">
@@ -90,27 +87,45 @@ export default function PackageDetailClient({ pkg, seo, company, recommended }: 
             {/* Right: Booking Summary / CTA */}
             <div className="lg:col-span-5">
               <div className="bg-white p-8 rounded-[40px] border border-gray-100 shadow-2xl sticky top-28 space-y-8">
-                <div>
-                  <span className="text-gray-400 text-xs font-bold uppercase tracking-widest block mb-2">Harga Paket</span>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-4xl font-black text-primary-600">{priceFormatted}</span>
-                    <span className="text-gray-400 text-sm font-medium">/ orang</span>
+                {priceFormatted && (
+                  <div>
+                    <span className="text-gray-400 text-xs font-bold uppercase tracking-widest block mb-2">Harga Paket</span>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-4xl font-black text-primary-600">{priceFormatted}</span>
+                    </div>
                   </div>
-                </div>
+                )}
 
                 <div className="space-y-4">
-                  <h3 className="font-bold text-gray-900">Fasilitas Termasuk:</h3>
+                  <h3 className="font-bold text-gray-900">Syarat & Ketentuan:</h3>
+
                   <ul className="space-y-3">
                     {[
-                      "Akomodasi Bintang 4/5",
-                      "Transportasi AC Selama Trip",
-                      "Konsumsi Sesuai Jadwal",
-                      "Pemandu Wisata Profesional",
-                      "Tiket Masuk Objek Wisata",
-                      "Asuransi Perjalanan"
+                      "Check-in mulai pukul 14:00 WIB",
+                      "Check-out maksimal pukul 12:00 WIB",
+                      "DP minimal 50% untuk konfirmasi booking",
+                      "Pembatalan H-3 tidak dapat refund",
+                      "Menjaga kebersihan dan fasilitas villa",
+                      "Dilarang membawa barang berbahaya atau terlarang"
                     ].map((item, idx) => (
-                      <li key={idx} className="flex items-center gap-3 text-sm text-gray-600">
-                        <svg className="w-5 h-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"/></svg>
+                      <li
+                        key={idx}
+                        className="flex items-start gap-3 text-sm text-gray-600"
+                      >
+                        <svg
+                          className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z"
+                          />
+                        </svg>
+
                         <span>{item}</span>
                       </li>
                     ))}
@@ -164,9 +179,13 @@ export default function PackageDetailClient({ pkg, seo, company, recommended }: 
                         </Link>
                       </div>
                       <div className="mt-4 flex items-center justify-between">
-                        <span className="text-primary-600 font-black">
-                          {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(item.price)}
-                        </span>
+                        {item.price > 0 ? (
+                          <span className="text-primary-600 font-black">
+                            {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(item.price)}
+                          </span>
+                        ) : (
+                          <span></span>
+                        )}
                         <Link href={`/paket/${item.slug}`} className="text-xs font-bold text-gray-900 hover:text-primary-600 transition-colors">Detail →</Link>
                       </div>
                     </div>

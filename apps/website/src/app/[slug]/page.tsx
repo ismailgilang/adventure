@@ -9,7 +9,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   
   const siteSeo = landingData.seo;
   const company = landingData.company;
-  const brandName = company?.name || "IO Travel";
+  const brandName = company?.name || "Villa Situ Cileunca";
 
   if (!article) {
     return {

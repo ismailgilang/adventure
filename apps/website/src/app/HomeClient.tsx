@@ -136,10 +136,8 @@ export default function HomeClient({
     duration: pkg.duration,
     rating: "5.0",
     reviews: "98",
-    price: new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(pkg.price),
+    price: pkg.price > 0 ? new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(pkg.price) : null,
     image: pkg.imageUrl || "https://image.qwenlm.ai/public_source/3524cccd-e29b-4d9f-9189-5394346ea852/1254e5187-8d09-4038-9944-a45fab0e7943.png",
-    badge: pkg.price > 8000000 ? "Premium Trip" : "Terlaris",
-    badgeColor: pkg.price > 8000000 ? "bg-accent-600/90" : "bg-primary-600/90"
   })) : [];
 
   // Handle WhatsApp URL based on company profile

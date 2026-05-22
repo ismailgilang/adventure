@@ -19,17 +19,22 @@ export default function Navbar({ navScrolled, seo, company, toggleMenu }: Navbar
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
         <div className="flex items-center justify-between h-full">
-          <Link href="/" className="flex items-center gap-2 group">
+          <Link href="/" className="flex items-center gap-3 group">
             {seo?.logoUrl ? (
-              <img src={seo.logoUrl} alt="Logo" className="h-15 w-auto object-contain transition-transform group-hover:scale-110" />
+              <img src={seo.logoUrl} alt="Logo" className="h-12 w-auto object-contain transition-transform group-hover:scale-110" />
             ) : (
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-600 to-accent-600 flex items-center justify-center font-bold text-xl text-white group-hover:scale-110 transition-transform">
-                {company?.name ? company.name.substring(0, 2).toUpperCase() : "IO"}
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary-600 to-accent-600 flex items-center justify-center font-black text-2xl text-white group-hover:rotate-12 transition-all shadow-lg shadow-primary-500/20">
+                V
               </div>
             )}
-            <span className={`text-xl font-bold tracking-tight transition-colors ${navScrolled ? "text-gray-900" : "text-white"}`}>
-              {company?.name || "Travel"}
-            </span>
+            <div className="flex flex-col -space-y-1">
+              <span className={`text-xl font-black tracking-tighter transition-colors ${navScrolled ? "text-primary-600" : "text-white"}`}>
+                VILLA
+              </span>
+              <span className={`text-[11px] font-extrabold tracking-[0.2em] transition-colors ${navScrolled ? "text-accent-600" : "text-accent-300"}`}>
+                SITU CILEUNCA
+              </span>
+            </div>
           </Link>
 
           {/* Desktop Navbar */}

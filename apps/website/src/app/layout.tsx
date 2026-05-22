@@ -17,8 +17,8 @@ export async function generateMetadata(): Promise<Metadata> {
     const companyData = await db.select().from(companyProfile).limit(1);
     
     const company = companyData[0];
-    const brandName = company?.name || "IO Travel";
-    const defaultTitle = `${brandName} - Jelajahi Surga Nusantara`;
+    const brandName = company?.name || "Villa Situ Cileunca";
+    const defaultTitle = `${brandName} - Jelajahi Keindahan Alam`;
 
     if (seoData && seoData[0]) {
       const s = seoData[0];
