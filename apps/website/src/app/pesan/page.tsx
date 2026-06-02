@@ -93,6 +93,25 @@ export default function PesanPage() {
       const namaPaket = selectedPaket?.name || "";
       const namaVilla = selectedVilla?.name || "";
 
+      // Upload bukti pembayaran ke Cloudinary
+      const uploadFormData = new FormData();
+      uploadFormData.append("file", paymentFile);
+      uploadFormData.append("upload_preset", "adventure");
+      uploadFormData.append("folder", "adventure/payment-proofs");
+
+      const uploadRes = await fetch(
+        `https://api.cloudinary.com/v1_1/djsyrismk/image/upload`,
+        { method: "POST", body: uploadFormData }
+      );
+
+      if (!uploadRes.ok) {
+        toast.error("Gagal mengupload bukti pembayaran.");
+        return;
+      }
+
+      const uploadData = await uploadRes.json();
+      const paymentProofUrl = uploadData.secure_url;
+
       const response = await fetch("/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -107,6 +126,7 @@ export default function PesanPage() {
           namaPemesan2: form.namaPemesan2 || null,
           packageId: form.paketId || null,
           villaId: form.villaId || null,
+          paymentProof: paymentProofUrl,
         }),
       });
 

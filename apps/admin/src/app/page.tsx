@@ -360,9 +360,13 @@ export default function AdminPage() {
 
         <div className="max-w-md w-full glass-panel rounded-3xl p-10 border border-white/80 shadow-2xl relative z-10 flex flex-col items-center">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-600 to-teal-500 flex items-center justify-center font-bold text-2xl text-white shadow-lg">IO</div>
+            {seo?.logoUrl ? (
+              <img src={seo.logoUrl} alt="Logo" className="w-12 h-12 rounded-2xl object-cover shadow-lg" />
+            ) : (
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-600 to-teal-500 flex items-center justify-center font-bold text-2xl text-white shadow-lg">ES</div>
+            )}
             <div>
-              <span className="text-xl font-black tracking-tight text-slate-800 block">IO Travel</span>
+              <span className="text-xl font-black tracking-tight text-slate-800 block">{company?.name || "EO Situ Cileunca"}</span>
               <span className="text-[10px] uppercase font-bold text-indigo-600 tracking-wider">Management Control</span>
             </div>
           </div>
@@ -422,9 +426,13 @@ export default function AdminPage() {
         <div>
           {/* Dashboard Logo */}
           <div className="flex items-center gap-3 mb-10">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-600 to-teal-500 flex items-center justify-center font-bold text-xl text-white shadow-md">IO</div>
+            {seo?.logoUrl ? (
+              <img src={seo.logoUrl} alt="Logo" className="w-10 h-10 rounded-xl object-cover shadow-md" />
+            ) : (
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-600 to-teal-500 flex items-center justify-center font-bold text-xl text-white shadow-md">ES</div>
+            )}
             <div>
-              <span className="text-base font-extrabold tracking-tight text-slate-800 block">IO Travel</span>
+              <span className="text-base font-extrabold tracking-tight text-slate-800 block">{company?.name || "EO Situ Cileunca"}</span>
               <span className="text-[10px] uppercase font-bold text-indigo-600 tracking-wider">Control Panel</span>
             </div>
           </div>
@@ -567,7 +575,7 @@ export default function AdminPage() {
               {activeTab === "seo" && "SEO & Branding Settings"}
             </h1>
             <p className="text-sm text-slate-500 mt-1">
-              Selamat datang kembali, Admin. Pantau dan kelola seluruh petualangan IO Travel Anda di sini.
+              Selamat datang kembali, Admin. Pantau dan kelola seluruh petualangan {company?.name || "EO Situ Cileunca"} Anda di sini.
             </p>
           </div>
           <div className="flex items-center gap-4">
@@ -786,7 +794,7 @@ export default function AdminPage() {
         {/* Tab 4: Bookings */}
         {activeTab === "bookings" && (
           <div className="space-y-6">
-            <span className="text-slate-500 text-sm block">Data Reservasi Pengunjung IO Travel</span>
+            <span className="text-slate-500 text-sm block">Data Reservasi Pengunjung {company?.name || "EO Situ Cileunca"}</span>
             <div className="glass-card rounded-2xl overflow-hidden">
               <table className="w-full text-left border-collapse">
                 <thead>
@@ -794,6 +802,7 @@ export default function AdminPage() {
                     <th className="p-6">Kode & Nama Tamu</th>
                     <th className="p-6">Jadwal & Paket</th>
                     <th className="p-6">Harga Total</th>
+                    <th className="p-6 text-center">Bukti</th>
                     <th className="p-6 text-center">Status</th>
                     <th className="p-6 text-right">Aksi</th>
                   </tr>
@@ -804,6 +813,7 @@ export default function AdminPage() {
                       <td className="p-6">
                         <span className="font-mono font-bold text-indigo-600 text-xs block mb-1">{b.bookingCode}</span>
                         <span className="font-bold text-slate-800 text-sm block leading-tight">{b.customerName}</span>
+                        {b.namaPemesan2 && <span className="text-xs text-slate-400 block">{b.namaPemesan2}</span>}
                         <span className="text-xs text-slate-400 block mt-1">{b.customerPhone} | {b.customerEmail}</span>
                       </td>
                       <td className="p-6">
@@ -811,6 +821,16 @@ export default function AdminPage() {
                         <span className="text-xs text-slate-400 block">{b.bookingDate} | {b.totalGuests} Pax</span>
                       </td>
                       <td className="p-6 font-mono font-bold text-slate-800 text-sm">{formatRupiah(b.totalPrice)}</td>
+                      <td className="p-6 text-center">
+                        {b.paymentProof ? (
+                          <a href={b.paymentProof} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-800 underline">
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                            Lihat
+                          </a>
+                        ) : (
+                          <span className="text-xs text-slate-400">-</span>
+                        )}
+                      </td>
                       <td className="p-6 text-center">
                         <select
                           value={b.status}
@@ -1235,7 +1255,7 @@ export default function AdminPage() {
                   <div className="space-y-4">
                     <div>
                       <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Meta Title Utama</label>
-                      <input type="text" value={seo.title || ""} onChange={(e) => setSeo({ ...seo, title: e.target.value })} placeholder="IO Travel - Jelajahi Surga Nusantara" className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-sm focus:border-indigo-500 outline-none" />
+                      <input type="text" value={seo.title || ""} onChange={(e) => setSeo({ ...seo, title: e.target.value })} placeholder={`${company?.name || "EO Situ Cileunca"} - Jelajahi Keindahan Alam`} className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-sm focus:border-indigo-500 outline-none" />
                     </div>
                     <div>
                       <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Meta Keywords (Koma)</label>

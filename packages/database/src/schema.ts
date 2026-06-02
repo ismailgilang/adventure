@@ -69,6 +69,7 @@ export const bookings = pgTable('bookings', {
   namaPemesan2: text('nama_pemesan2'),
   packageId: uuid('package_id'),
   villaId: uuid('villa_id'),
+  paymentProof: text('payment_proof'),
   status: text('status').default('booking').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),

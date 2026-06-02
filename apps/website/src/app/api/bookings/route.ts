@@ -15,7 +15,7 @@ function generateBookingCode(): string {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { packageName, customerName, customerEmail, customerPhone, bookingDate, totalGuests, totalPrice, namaPemesan2, packageId, villaId } = body;
+    const { packageName, customerName, customerEmail, customerPhone, bookingDate, totalGuests, totalPrice, namaPemesan2, packageId, villaId, paymentProof } = body;
 
     if (!packageName || !customerName || !customerEmail || !customerPhone || !bookingDate || !totalGuests || !totalPrice) {
       return NextResponse.json({
@@ -39,6 +39,7 @@ export async function POST(request: Request) {
       namaPemesan2: namaPemesan2 || null,
       packageId: packageId || null,
       villaId: villaId || null,
+      paymentProof: paymentProof || null,
       status: 'booking',
     }).returning();
 
