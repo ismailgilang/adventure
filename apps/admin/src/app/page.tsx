@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import toast from "react-hot-toast";
 import ImageUpload from "../components/ImageUpload";
+import ConfirmationModal from "../components/ConfirmationModal";
 
 export default function AdminPage() {
   // Authentication states
@@ -14,7 +16,7 @@ export default function AdminPage() {
 
   // Tab & content states
   const [activeTab, setActiveTab] = useState<"dashboard" | "packages" | "articles" | "bookings" | "landing" | "company" | "gallery" | "users" | "seo">("dashboard");
-  const [activeLandingSubTab, setActiveLandingSubTab] = useState<"hero" | "about" | "features" | "testimonials" | "team" | "cta">("hero");
+  const [activeLandingSubTab, setActiveLandingSubTab] = useState<"hero" | "about" | "features" | "testimonials" | "team" | "cta" | "quotes">("hero");
 
   // Database State Lists
   const [packages, setPackages] = useState<any[]>([]);
@@ -29,6 +31,7 @@ export default function AdminPage() {
   // Config tables (Hero, About, CTA, Meta, Company)
   const [hero, setHero] = useState<any>({ title: "", subtitle: "", buttonText: "", imageUrl: "" });
   const [about, setAbout] = useState<any>({ title: "", subtitle: "", description: "", statsGuests: "", statsDestinations: "", statsGuides: "", imageUrl: "" });
+  const [quotes, setQuotes] = useState<any>({ title: "" });
   const [cta, setCta] = useState<any>({ title: "", subtitle: "", buttonText: "", buttonUrl: "" });
   const [seo, setSeo] = useState<any>({ 
     title: "", 
@@ -61,9 +64,10 @@ export default function AdminPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editItem, setEditItem] = useState<any | null>(null);
   const [modalType, setModalType] = useState<"packages" | "articles" | "team" | "testimonials" | "features" | "users" | "gallery" | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ table: string; id: string } | null>(null);
 
   // Form input bindings
-  const [pkgForm, setPkgForm] = useState({ name: "", price: 0, duration: "", description: "", imageUrl: "", status: "DRAFT" });
+  const [pkgForm, setPkgForm] = useState({ name: "", price: 0, duration: "", description: "", imageUrl: "", category: "wisata", status: "DRAFT" });
   const [artForm, setArtForm] = useState({ title: "", content: "", imageUrl: "", status: "DRAFT" });
   const [teamForm, setTeamForm] = useState({ name: "", role: "", imageUrl: "", instagramUrl: "" });
   const [testForm, setTestForm] = useState({ name: "", role: "", review: "", rating: 5, imageUrl: "" });
@@ -87,7 +91,7 @@ export default function AdminPage() {
         return data.success ? data.data : [];
       };
 
-      const [pkgs, arts, bks, tm, test, feats, usrs, hr, ab, ct, mt, comp, gal] = await Promise.all([
+      const [pkgs, arts, bks, tm, test, feats, usrs, hr, ab, ct, mt, comp, gal, qt] = await Promise.all([
         getTable("packages"),
         getTable("articles"),
         getTable("bookings"),
@@ -101,6 +105,7 @@ export default function AdminPage() {
         getTable("meta"),
         getTable("company"),
         getTable("gallery"),
+        getTable("quotes"),
       ]);
 
       setPackages(pkgs || []);
@@ -117,6 +122,7 @@ export default function AdminPage() {
       if (ct && ct.length > 0) setCta(ct[0]);
       if (mt && mt.length > 0) setSeo(mt[0]);
       if (comp && comp.length > 0) setCompany(comp[0]);
+      if (qt && qt.length > 0) setQuotes(qt[0]);
 
     } catch (err) {
       console.error("Gagal memuat data dari database Neon:", err);
@@ -185,9 +191,9 @@ export default function AdminPage() {
   };
 
   // CRUD Operations handler
-  const handleSaveConfig = async (section: "hero" | "about" | "cta" | "meta" | "company", payload: any) => {
+  const handleSaveConfig = async (section: "hero" | "about" | "cta" | "meta" | "company" | "quotes", payload: any) => {
     try {
-      const recordId = section === "meta" ? "seo_config" : section === "company" ? "company_config" : `${section}_content`;
+      const recordId = section === "meta" ? "seo_config" : section === "company" ? "company_config" : section === "quotes" ? "quotes_content" : `${section}_content`;
       const response = await fetch(`/api/crud?table=${section === "meta" ? "meta" : section}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -195,30 +201,37 @@ export default function AdminPage() {
       });
       const res = await response.json();
       if (res.success) {
-        alert(`${section === "meta" ? "SEO & Branding" : section === "company" ? "Profil Perusahaan" : "Konfigurasi landing page"} berhasil disimpan!`);
+        toast.success(`${section === "meta" ? "SEO & Branding" : section === "company" ? "Profil Perusahaan" : "Konfigurasi landing page"} berhasil disimpan!`);
         loadAllData();
       } else {
-        alert(res.message || "Gagal menyimpan konfigurasi.");
+        toast.error(res.message || "Gagal menyimpan konfigurasi.");
       }
     } catch (err) {
-      alert("Terjadi kesalahan koneksi.");
+      toast.error("Terjadi kesalahan koneksi.");
     }
   };
 
   const handleDelete = async (table: string, id: string) => {
-    if (!confirm("Apakah Anda yakin ingin menghapus data ini?")) return;
+    setDeleteConfirm({ table, id });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteConfirm) return;
+    const { table, id } = deleteConfirm;
+    setDeleteConfirm(null);
     try {
       const response = await fetch(`/api/crud?table=${table}&id=${id}`, {
         method: "DELETE"
       });
       const res = await response.json();
       if (res.success) {
+        toast.success("Data berhasil dihapus!");
         loadAllData();
       } else {
-        alert(res.message || "Gagal menghapus data.");
+        toast.error(res.message || "Gagal menghapus data.");
       }
     } catch (err) {
-      alert("Terjadi kesalahan koneksi.");
+      toast.error("Terjadi kesalahan koneksi.");
     }
   };
 
@@ -235,7 +248,7 @@ export default function AdminPage() {
         loadAllData();
       }
     } catch (err) {
-      alert("Gagal mengubah status.");
+      toast.error("Gagal mengubah status.");
     }
   };
 
@@ -251,7 +264,7 @@ export default function AdminPage() {
         loadAllData();
       }
     } catch (err) {
-      alert("Gagal mengubah status booking.");
+      toast.error("Gagal mengubah status booking.");
     }
   };
 
@@ -259,7 +272,7 @@ export default function AdminPage() {
     setModalType(type);
     setEditItem(null);
     // Reset forms
-    setPkgForm({ name: "", price: 0, duration: "", description: "", imageUrl: "", status: "DRAFT" });
+    setPkgForm({ name: "", price: 0, duration: "", description: "", imageUrl: "", category: "wisata", status: "DRAFT" });
     setArtForm({ title: "", content: "", imageUrl: "", status: "DRAFT" });
     setTeamForm({ name: "", role: "", imageUrl: "", instagramUrl: "" });
     setTestForm({ name: "", role: "", review: "", rating: 5, imageUrl: "" });
@@ -318,12 +331,13 @@ export default function AdminPage() {
       const res = await response.json();
       if (res.success) {
         setShowAddModal(false);
+        toast.success(editItem ? "Data berhasil diperbarui!" : "Data berhasil disimpan!");
         loadAllData();
       } else {
-        alert(res.message || "Gagal menyimpan data.");
+        toast.error(res.message || "Gagal menyimpan data.");
       }
     } catch (err) {
-      alert("Terjadi kesalahan koneksi.");
+      toast.error("Terjadi kesalahan koneksi.");
     }
   };
 
@@ -579,7 +593,7 @@ export default function AdminPage() {
               <div className="glass-card p-6 rounded-2xl flex flex-col justify-between">
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Pendapatan Kotor</span>
                 <span className="text-4xl font-extrabold text-slate-800">
-                  {formatRupiah(bookings.reduce((sum, b) => b.status === "CONFIRMED" ? sum + b.totalPrice : sum, 0))}
+                  {formatRupiah(bookings.reduce((sum, b) => b.status === "selesai" ? sum + b.totalPrice : sum, 0))}
                 </span>
                 <span className="text-xs text-teal-600 font-semibold mt-3 flex items-center gap-1">
                   Khusus booking terkonfirmasi
@@ -802,13 +816,15 @@ export default function AdminPage() {
                           value={b.status}
                           onChange={(e) => handleBookingStatusChange(b.id, e.target.value)}
                           className={`px-3 py-1 rounded-full text-xs font-bold focus:outline-none border border-transparent cursor-pointer ${
-                            b.status === "CONFIRMED" ? "bg-emerald-50 text-emerald-600" :
-                            b.status === "CANCELLED" ? "bg-red-50 text-red-600" : "bg-amber-50 text-amber-600"
+                            b.status === "selesai" ? "bg-emerald-50 text-emerald-600" :
+                            b.status === "dibatalkan" ? "bg-red-50 text-red-600" :
+                            b.status === "proses" ? "bg-blue-50 text-blue-600" : "bg-amber-50 text-amber-600"
                           }`}
                         >
-                          <option value="PENDING">PENDING</option>
-                          <option value="CONFIRMED">CONFIRMED</option>
-                          <option value="CANCELLED">CANCELLED</option>
+                          <option value="booking">Booking</option>
+                          <option value="proses">Proses</option>
+                          <option value="selesai">Selesai</option>
+                          <option value="dibatalkan">Dibatalkan</option>
                         </select>
                       </td>
                       <td className="p-6 text-right">
@@ -942,7 +958,7 @@ export default function AdminPage() {
           <div className="space-y-8">
             {/* Sub Tabs Panel */}
             <div className="flex border-b border-slate-200 gap-1 flex-wrap">
-              {(["hero", "about", "features", "testimonials", "team", "cta"] as const).map((sub) => (
+              {(["hero", "about", "features", "testimonials", "team", "cta", "quotes"] as const).map((sub) => (
                 <button
                   key={sub}
                   onClick={() => setActiveLandingSubTab(sub)}
@@ -956,6 +972,7 @@ export default function AdminPage() {
                   {sub === "testimonials" && "Testimoni"}
                   {sub === "team" && "Tim Profesional"}
                   {sub === "cta" && "Siap Petualangan"}
+                  {sub === "quotes" && "Kata Kata Hari Ini"}
                 </button>
               ))}
             </div>
@@ -1113,6 +1130,18 @@ export default function AdminPage() {
             )}
 
             {/* Sub Tab Content 6: CTA Bottom */}
+            {activeLandingSubTab === "quotes" && (
+              <form onSubmit={(e) => { e.preventDefault(); handleSaveConfig("quotes", quotes); }} className="glass-card p-8 rounded-3xl space-y-6 w-full">
+                <h3 className="text-lg font-bold text-slate-800 mb-2">Edit Kata Kata Hari Ini</h3>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Kata Kata Hari Ini</label>
+                  <textarea value={quotes.title} onChange={(e) => setQuotes({ ...quotes, title: e.target.value })} required rows={4} className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:border-indigo-500 text-slate-800 text-sm resize-none" placeholder="Masukkan kata-kata inspiratif hari ini..." />
+                </div>
+                <button type="submit" className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition-colors shadow-md">Simpan Kata Kata Hari Ini</button>
+              </form>
+            )}
+
+            {/* Sub Tab Content 7: CTA Bottom */}
             {activeLandingSubTab === "cta" && (
               <form onSubmit={(e) => { e.preventDefault(); handleSaveConfig("cta", cta); }} className="glass-card p-8 rounded-3xl space-y-6 w-full">
                 <h3 className="text-lg font-bold text-slate-800 mb-2">Edit Footer Call To Action</h3>
@@ -1323,6 +1352,15 @@ export default function AdminPage() {
                       <ImageUpload label="URL Gambar Utama" value={pkgForm.imageUrl || ""} onChange={(url) => setPkgForm({ ...pkgForm, imageUrl: url })} section="packages" />
                     </div>
                     <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Kategori</label>
+                      <select value={pkgForm.category} onChange={(e) => setPkgForm({ ...pkgForm, category: e.target.value })} className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-sm">
+                        <option value="wisata">Wisata</option>
+                        <option value="villa">Villa</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
                       <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Status Visibilitas</label>
                       <select value={pkgForm.status} onChange={(e) => setPkgForm({ ...pkgForm, status: e.target.value })} className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-sm">
                         <option value="DRAFT">DRAFT</option>
@@ -1498,6 +1536,14 @@ export default function AdminPage() {
           </div>
         </div>
       )}
+
+      <ConfirmationModal
+        open={!!deleteConfirm}
+        title="Hapus Data"
+        message="Apakah Anda yakin ingin menghapus data ini? Tindakan ini tidak dapat dibatalkan."
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteConfirm(null)}
+      />
     </div>
   );
 }

@@ -12,6 +12,7 @@ export default async function BlogPage() {
       articles={articles}
       seo={landingData.seo}
       company={landingData.company}
+      packages={landingData.packages}
     />
   );
 }

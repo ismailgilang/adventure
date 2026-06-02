@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.gallery = exports.companyProfile = exports.seoMeta = exports.landingCta = exports.landingFeatures = exports.landingTestimonials = exports.landingTeam = exports.landingAbout = exports.landingHero = exports.bookings = exports.tourPackages = exports.users = exports.articles = void 0;
+exports.landingQuotes = exports.gallery = exports.companyProfile = exports.seoMeta = exports.landingCta = exports.landingFeatures = exports.landingTestimonials = exports.landingTeam = exports.landingAbout = exports.landingHero = exports.bookings = exports.tourPackages = exports.users = exports.articles = void 0;
 const pg_core_1 = require("drizzle-orm/pg-core");
 // ==========================================
 // 1. TABEL ARTIKEL (BLOG)
@@ -173,4 +173,12 @@ exports.gallery = (0, pg_core_1.pgTable)('gallery', {
     imageUrl: (0, pg_core_1.text)('image_url').notNull(),
     category: (0, pg_core_1.text)('category').default('GENERAL').notNull(), // 'TOUR' | 'TEAM' | 'GENERAL'
     createdAt: (0, pg_core_1.timestamp)('created_at').defaultNow().notNull(),
+});
+// ==========================================
+// 14. TABEL LANDING: KATA KATA HARI INI
+// ==========================================
+exports.landingQuotes = (0, pg_core_1.pgTable)('landing_quotes', {
+    id: (0, pg_core_1.text)('id').primaryKey(), // Default: 'quotes_content'
+    title: (0, pg_core_1.text)('title').notNull(),
+    updatedAt: (0, pg_core_1.timestamp)('updated_at').defaultNow().notNull(),
 });

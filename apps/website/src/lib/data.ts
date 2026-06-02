@@ -11,7 +11,8 @@ import {
   seoMeta,
   companyProfile,
   articles,
-  gallery
+  gallery,
+  landingQuotes
 } from './db';
 import { eq, desc } from 'drizzle-orm';
 
@@ -23,6 +24,7 @@ export const TAGS = {
   TESTIMONIALS: 'testimonials',
   FEATURES: 'features',
   CTA: 'cta',
+  QUOTES: 'quotes',
   PACKAGES: 'packages',
   SEO: 'seo',
   COMPANY: 'company',
@@ -34,7 +36,7 @@ export const getLandingData = unstable_cache(
   async () => {
     const db = createDb();
     
-    const [heroData, aboutData, teamData, testimonialData, featureData, ctaData, packagesData, seoData, companyData] = await Promise.all([
+    const [heroData, aboutData, teamData, testimonialData, featureData, ctaData, packagesData, seoData, companyData, quotesData] = await Promise.all([
       db.select().from(landingHero).limit(1),
       db.select().from(landingAbout).limit(1),
       db.select().from(landingTeam),
@@ -44,6 +46,7 @@ export const getLandingData = unstable_cache(
       db.select().from(tourPackages).where(eq(tourPackages.status, 'PUBLISHED')).orderBy(desc(tourPackages.createdAt)),
       db.select().from(seoMeta).limit(1),
       db.select().from(companyProfile).limit(1),
+      db.select().from(landingQuotes).limit(1),
     ]);
 
     return {
@@ -56,6 +59,7 @@ export const getLandingData = unstable_cache(
       packages: packagesData,
       seo: seoData[0] || null,
       company: companyData[0] || null,
+      quotes: quotesData[0] || null,
     };
   },
   ['landing-page-data'],

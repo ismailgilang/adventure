@@ -27,50 +27,12 @@ interface BlogDetailClientProps {
   seo: any;
   company?: any;
   slug: string;
+  packages?: any[];
 }
 
-export default function BlogDetailClient({ article: dbArticle, recommended: dbRecommended, seo, company, slug }: BlogDetailClientProps) {
+export default function BlogDetailClient({ article: dbArticle, recommended: dbRecommended, seo, company, slug, packages }: BlogDetailClientProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const toggleMenu = () => setMenuOpen(!menuOpen);
-
-  const fallbackArticles = [
-    {
-      id: 1,
-      title: "5 Panduan Lengkap Sebelum Berkunjung Ke Raja Ampat",
-      slug: "5-panduan-lengkap-sebelum-berkunjung-ke-raja-ampat",
-      category: "destinasi",
-      badge: "Panduan Wisata",
-      badgeColor: "bg-primary-600/90",
-      date: "18 Mei 2026",
-      readTime: "Baca 5 Menit",
-      snippet: "Raja Ampat adalah surga dunia yang berada di bagian timur Indonesia. Sebelum berangkat ke gugusan pulau eksotis ini, pastikan Anda memahami perizinan, musim terbaik, dan peralatan diving.",
-      image: "https://image.qwenlm.ai/public_source/3524cccd-e29b-4d9f-9189-5394346ea852/18102e25a-831b-4c33-82cd-517f38151447.png",
-      body: `
-        <p class="mb-6">Raja Ampat adalah surga dunia yang berada di bagian timur Indonesia. Keindahan bawah lautnya yang legendaris, jajaran pulau karang eksotis, dan keunikan budaya lokalnya menjadikan destinasi ini impian setiap pelancong.</p>
-        <p class="mb-6"><b>1. Siapkan Perizinan (KPJL)</b><br/>Setiap wisatawan asing maupun lokal yang ingin masuk ke Raja Ampat wajib membayar Kartu Pemeliharaan Jasa Lingkungan (KPJL) yang digunakan untuk kelestarian laut setempat. Pastikan Anda mengurusnya setiba di Waisai.</p>
-        <p class="mb-6"><b>2. Pilih Waktu Terbaik (Oktober - April)</b><br/>Bulan-bulan ini adalah waktu ideal karena laut cenderung sangat tenang with visibilitas bawah air yang luar biasa jernih. Cocok bagi Anda yang ingin snorkeling atau selam scuba.</p>
-        <p class="mb-6"><b>3. Bawa Uang Tunai Secukupnya</b><br/>Mesin ATM sangat terbatas di area kepulauan Raja Ampat. Pastikan Anda menarik uang tunai yang cukup saat berada di kota Sorong untuk membayar akomodasi lokal and sewa perahu.</p>
-        <p class="mb-6"><b>4. Gunakan Tabir Surya Ramah Lingkungan</b><br/>Guna melindungi ekosistem karang yang berharga, gunakan tabir surya fisik (physical sunscreen) yang berlabel <i>coral-reef safe</i> (bebas oxybenzone).</p>
-      `
-    },
-    {
-      id: 2,
-      title: "Keajaiban Budaya & Sunrise Eksotis di Tegalalang, Ubud",
-      slug: "keajaiban-budaya-sunrise-eksotis-di-tegalalang-ubud",
-      category: "budaya",
-      badge: "Budaya & Kuliner",
-      badgeColor: "bg-accent-600/90",
-      date: "15 Mei 2026",
-      readTime: "Baca 4 Menit",
-      snippet: "Ubud tidak sekadar tentang ketenangan. Hijaunya sawah terasering Tegalalang menyembunyikan cerita sistem perairan Subak yang diakui UNESCO serta kearifan lokal masyarakat adat.",
-      image: "https://image.qwenlm.ai/public_source/3524cccd-e29b-4d9f-9189-5394346ea852/1254e5187-8d09-4038-9944-a45fab0e7943.png",
-      body: `
-        <p class="mb-6">Ubud menyajikan keheningan dan keindahan budaya Bali yang autentik. Salah satu ikon terbaiknya adalah sawah bertingkat Tegalalang. Kehijauan sawah yang berundak indah bukan sekadar komoditas visual komersial, melainkan bagian dari sejarah panjang sistem pengairan <b>Subak</b>.</p>
-        <p class="mb-6">Subak adalah sebuah manifestasi filosofi masyarakat Hindu Bali, yaitu <i>Tri Hita Karana</i>, yang menekankan hubungan harmonis antara manusia dengan Tuhan, manusia dengan sesama, dan manusia dengan alam sekitarnya.</p>
-        <p class="mb-6">Datanglah pukul 06.00 WITA. Kabut tipis yang menyelimuti terasering berpadu dengan sorot cahaya emas matahari terbit menyajikan panorama magis yang tiada duanya. Anda juga dapat berbincang langsung dengan para petani lokal yang memelihara ekosistem sawah ini dengan cara-cara tradisional yang turun-temurun.</p>
-      `
-    }
-  ];
 
   const mapArticle = (art: any) => {
     if (!art) return null;
@@ -110,8 +72,8 @@ export default function BlogDetailClient({ article: dbArticle, recommended: dbRe
     };
   };
 
-  const article = mapArticle(dbArticle) || fallbackArticles.find(a => a.slug === slug);
-  const recommended = dbRecommended.length > 0 ? dbRecommended.map(mapArticle) : fallbackArticles.filter(a => a.slug !== slug);
+  const article = mapArticle(dbArticle);
+  const recommended = dbRecommended.map(mapArticle).filter(Boolean);
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 flex flex-col">
@@ -197,7 +159,7 @@ export default function BlogDetailClient({ article: dbArticle, recommended: dbRe
         </div>
       </main>
 
-      <Footer seo={seo} cta={{}} company={company} />
+      <Footer seo={seo} cta={{}} company={company} packages={packages} />
     </div>
   );
 }

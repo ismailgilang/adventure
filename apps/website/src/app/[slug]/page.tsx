@@ -61,7 +61,8 @@ export default async function BlogDetailPage({ params }: { params: Promise<{ slu
       recommended={recommended} 
       seo={landingData.seo} 
       company={landingData.company}
-      slug={slug} 
+      slug={slug}
+      packages={landingData.packages}
     />
   );
 }

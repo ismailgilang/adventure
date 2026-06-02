@@ -1,20 +1,11 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-import Link from "next/link";
+import { useState, useEffect } from "react";
+import toast from "react-hot-toast";
 import Navbar from "@/components/layout/Navbar";
 import MobileMenu from "@/components/layout/MobileMenu";
 import Footer from "@/components/layout/Footer";
 import { Skeleton } from "@/components/ui/Skeleton";
-
-interface BookingForm {
-  nama: string;
-  email: string;
-  telepon: string;
-  paket: string;
-  tanggal: string;
-  tamu: number;
-}
 
 export default function PesanPage() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -22,322 +13,388 @@ export default function PesanPage() {
   const [seo, setSeo] = useState<any>(null);
   const [company, setCompany] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [form, setForm] = useState<BookingForm>({
-    nama: "",
-    email: "",
-    telepon: "",
-    paket: "",
-    tanggal: "",
-    tamu: 1
-  });
+  const [step, setStep] = useState(1);
+  const [paymentFile, setPaymentFile] = useState<File | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  const [bookingCode, setBookingCode] = useState("");
-  const [showModal, setShowModal] = useState(false);
+  const [form, setForm] = useState({
+    namaPemesan: "",
+    namaPemesan2: "",
+    noWa: "",
+    email: "",
+    paketId: "",
+    villaId: "",
+    tanggal: "",
+    jumlahPeserta: 1,
+    totalHarga: 0,
+  });
 
   const toggleMenu = () => setMenuOpen(!menuOpen);
 
   useEffect(() => {
     setLoading(true);
-    // Fetch data dinamis (SEO, Packages & Company)
     fetch("/api/landing")
       .then((res) => res.json())
       .then((res) => {
         if (res.success && res.data) {
           if (res.data.seo) setSeo(res.data.seo);
           if (res.data.company) setCompany(res.data.company);
-          if (res.data.packages) {
-            setDbPackages(res.data.packages);
-            // Set default package if not set
-            if (res.data.packages.length > 0) {
-              setForm(prev => ({ ...prev, paket: res.data.packages[0].id }));
-            }
-          }
+          if (res.data.packages) setDbPackages(res.data.packages);
         }
       })
       .catch((err) => console.error("Gagal mengambil data landing:", err))
       .finally(() => setLoading(false));
   }, []);
 
-  // Derived pricing information
-  const pricing = useMemo(() => {
-    const selectedPkg = dbPackages.find(p => p.id === form.paket);
-    const base = selectedPkg ? selectedPkg.price : 0;
-    const sub = base * form.tamu;
-    const disc = Math.floor(sub * 0.1); // 10% automatic discount
-    const tot = sub - disc;
+  const wisataPackages = dbPackages.filter((p) => p.category === "wisata");
+  const villaPackages = dbPackages.filter((p) => p.category === "villa");
 
-    return {
-      basePrice: base,
-      subtotal: sub,
-      discount: disc,
-      total: tot
-    };
-  }, [form.paket, form.tamu, dbPackages]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [name]: name === "tamu" ? Math.max(1, parseInt(value) || 1) : value
-    }));
-  };
+  const selectedPaket = wisataPackages.find((p) => p.id === form.paketId);
+  const selectedVilla = villaPackages.find((p) => p.id === form.villaId);
 
   const formatRupiah = (val: number) => {
     return new Intl.NumberFormat("id-ID", {
       style: "currency",
       currency: "IDR",
-      maximumFractionDigits: 0
+      maximumFractionDigits: 0,
     }).format(val);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!form.nama || !form.email || !form.telepon || !form.tanggal || !form.paket) {
-      alert("Harap lengkapi seluruh formulir pemesanan!");
+  const handleNext = () => {
+    if (step === 2 && (!form.namaPemesan || !form.noWa || !form.email)) {
+      toast.error("Harap isi semua field yang wajib diisi!");
+      return;
+    }
+    if (step === 3 && (!form.paketId || !form.tanggal)) {
+      toast.error("Harap pilih paket wisata dan tanggal!");
+      return;
+    }
+    if (step === 3) {
+      setForm((prev) => ({
+        ...prev,
+        totalHarga: (selectedPaket?.price || 0) * prev.jumlahPeserta + (selectedVilla?.price || 0),
+      }));
+    }
+    setStep((s) => Math.min(s + 1, 4));
+  };
+  const handlePrev = () => setStep((s) => Math.max(s - 1, 1));
+
+  const handleSubmit = async () => {
+    if (!paymentFile) {
+      toast.error("Harap upload bukti pembayaran!");
       return;
     }
 
-    const selectedPkg = dbPackages.find(p => p.id === form.paket);
+    setSubmitting(true);
 
     try {
+      const selectedPaket = wisataPackages.find((p) => p.id === form.paketId);
+      const selectedVilla = villaPackages.find((p) => p.id === form.villaId);
+      const namaPaket = selectedPaket?.name || "";
+      const namaVilla = selectedVilla?.name || "";
+
       const response = await fetch("/api/bookings", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          packageName: selectedPkg ? selectedPkg.name : form.paket,
-          customerName: form.nama,
+          packageName: namaPaket + (namaVilla ? ` + ${namaVilla}` : ""),
+          customerName: form.namaPemesan,
           customerEmail: form.email,
-          customerPhone: form.telepon,
+          customerPhone: form.noWa,
           bookingDate: form.tanggal,
-          totalGuests: form.tamu,
-          totalPrice: pricing.total
-        })
+          totalGuests: form.jumlahPeserta,
+          totalPrice: form.totalHarga,
+          namaPemesan2: form.namaPemesan2 || null,
+          packageId: form.paketId || null,
+          villaId: form.villaId || null,
+        }),
       });
 
       const res = await response.json();
       if (res.success && res.data) {
-        setBookingCode(res.data.bookingCode);
-        setShowModal(true);
-      } else {
-        alert(res.message || "Gagal mengirimkan pemesanan. Silakan coba kembali.");
-      }
-    } catch (error) {
-      console.error("Error submitting booking:", error);
-      alert("Terjadi kesalahan koneksi. Silakan coba beberapa saat lagi.");
-    }
-  };
+        const bc = res.data.bookingCode;
+        const waNumber = company?.whatsapp?.replace(/[^0-9]/g, "") || "6281995451017";
+        const waMessage = encodeURIComponent(
+          `*Pemesanan Baru!*\n\n` +
+          `*Kode Booking:* ${bc}\n` +
+          `*Nama Pemesan:* ${form.namaPemesan}\n` +
+          (form.namaPemesan2 ? `*Nama Pemesan 2:* ${form.namaPemesan2}\n` : "") +
+          `*No WA:* ${form.noWa}\n` +
+          `*Email:* ${form.email}\n` +
+          `*Paket:* ${namaPaket}${namaVilla ? ` + ${namaVilla}` : ""}\n` +
+          `*Tanggal:* ${form.tanggal}\n` +
+          `*Jumlah Peserta:* ${form.jumlahPeserta}\n` +
+          `*Total Harga:* Rp ${form.totalHarga.toLocaleString("id-ID")}\n\n` +
+          `_Status: Booking_`
+        );
+        window.open(`https://wa.me/${waNumber}?text=${waMessage}`, "_blank");
 
-  const resetForm = () => {
-    setForm({
-      nama: "",
-      email: "",
-      telepon: "",
-      paket: dbPackages.length > 0 ? dbPackages[0].id : "",
-      tanggal: "",
-      tamu: 1
-    });
-    setShowModal(false);
+        toast.success(`Pemesanan berhasil! Kode booking: ${bc}`);
+        setForm({
+          namaPemesan: "",
+          namaPemesan2: "",
+          noWa: "",
+          email: "",
+          paketId: "",
+          villaId: "",
+          tanggal: "",
+          jumlahPeserta: 1,
+          totalHarga: 0,
+        });
+        setPaymentFile(null);
+        setStep(1);
+      } else {
+        toast.error(res.message || "Gagal mengirim pemesanan.");
+      }
+    } catch {
+      toast.error("Terjadi kesalahan koneksi.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const brandName = company?.name || "Villa Situ Cileunca";
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 flex flex-col justify-between">
+    <div className="min-h-screen bg-gray-50 text-gray-900 flex flex-col">
       <Navbar navScrolled={true} seo={seo} company={company} toggleMenu={toggleMenu} />
       <MobileMenu menuOpen={menuOpen} toggleMenu={toggleMenu} />
 
-      {/* Main Reservation Portal */}
       <main className="flex-grow pt-32 pb-16">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <span className="inline-block px-4 py-1.5 rounded-full bg-accent-100 border border-accent-200 text-accent-700 text-sm font-semibold mb-4">Portal Pemesanan</span>
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10">
+            <span className="inline-block px-4 py-1.5 rounded-full bg-accent-100 border border-accent-200 text-accent-700 text-sm font-semibold mb-4">Form Pemesanan</span>
             <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight mb-4">
               Reservasi <span className="gradient-text">Petualangan Anda</span>
             </h1>
-            <p className="text-gray-500 text-base max-w-xl mx-auto">
-              Lengkapi formulir pemesanan di bawah ini untuk mengamankan kursi Anda. Subtotal Anda dihitung secara instan.
-            </p>
+          </div>
+
+          {/* Step Indicator */}
+          <div className="flex items-center justify-center gap-2 mb-10">
+            {[1, 2, 3, 4].map((s) => (
+              <div key={s} className="flex items-center gap-2">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${
+                  step >= s ? "bg-primary-600 text-white" : "bg-gray-200 text-gray-400"
+                }`}>{s}</div>
+                {s < 4 && <div className={`w-10 h-1 rounded-full ${step > s ? "bg-primary-600" : "bg-gray-200"}`} />}
+              </div>
+            ))}
           </div>
 
           {loading ? (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-              <div className="lg:col-span-7 bg-white p-8 rounded-3xl border border-gray-100 shadow-xl space-y-8">
-                <Skeleton className="h-8 w-64" />
-                <div className="space-y-6">
-                  <Skeleton className="h-14 w-full rounded-2xl" />
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <Skeleton className="h-14 w-full rounded-2xl" />
-                    <Skeleton className="h-14 w-full rounded-2xl" />
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <Skeleton className="h-14 w-full rounded-2xl" />
-                    <Skeleton className="h-14 w-full rounded-2xl" />
-                  </div>
-                  <Skeleton className="h-14 w-44 rounded-2xl" />
-                  <Skeleton className="h-16 w-full rounded-2xl" />
-                </div>
-              </div>
-              <div className="lg:col-span-5 bg-white p-8 rounded-3xl border border-gray-100 shadow-xl space-y-8">
-                <Skeleton className="h-8 w-64" />
-                <div className="space-y-4">
-                  <Skeleton className="h-6 w-full" />
-                  <Skeleton className="h-6 w-full" />
-                  <Skeleton className="h-6 w-full" />
-                </div>
-                <Skeleton className="h-[200px] w-full rounded-2xl" />
-              </div>
+            <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-xl space-y-6">
+              <Skeleton className="h-8 w-64" />
+              <Skeleton className="h-14 w-full rounded-2xl" />
+              <Skeleton className="h-14 w-full rounded-2xl" />
+              <Skeleton className="h-14 w-44 rounded-2xl" />
             </div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-              {/* Booking Form Card */}
-              <div className="lg:col-span-7 bg-white p-8 rounded-3xl border border-gray-100 shadow-xl">
-                <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                  <span className="w-8 h-8 rounded-lg bg-primary-100 text-primary-600 flex items-center justify-center text-sm font-bold">1</span>
-                  <span>Data Pemesan & Jadwal</span>
-                </h2>
-                <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-xl">
+              {/* Step 1: Pemberitahuan */}
+              {step === 1 && (
+                <div className="space-y-6">
+                  <div className="w-16 h-16 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center mx-auto">
+                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                  </div>
+                  <h2 className="text-2xl font-bold text-center text-gray-900">Perhatian!</h2>
+                  <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 text-center">
+                    <p className="text-gray-700 text-base leading-relaxed">
+                      Sebelum melakukan pemesanan, sebaiknya hubungi admin terlebih dahulu untuk menanyakan
+                      ketersediaan jadwal dan paket wisata agar tidak terjadi kesalahan.
+                    </p>
+                  </div>
+                  <div className="bg-gray-50 rounded-2xl p-5 text-center">
+                    <p className="text-sm text-gray-500 mb-2">Hubungi Admin via WhatsApp:</p>
+                    <a
+                      href={`https://wa.me/${company?.whatsapp?.replace(/[^0-9]/g, "") || "6281995451017"}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-green-600 text-white font-bold rounded-2xl hover:bg-green-700 transition-colors"
+                    >
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" /></svg>
+                      Hubungi Admin
+                    </a>
+                  </div>
+                  <button onClick={handleNext} className="w-full py-4 rounded-2xl bg-primary-600 text-white font-bold hover:bg-primary-700 transition-colors">
+                    Lanjutkan Pemesanan
+                  </button>
+                </div>
+              )}
+
+              {/* Step 2: Data Diri */}
+              {step === 2 && (
+                <div className="space-y-6">
+                  <h2 className="text-xl font-bold text-gray-900">Data Diri</h2>
                   <div>
-                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Nama Lengkap</label>
-                    <input type="text" name="nama" value={form.nama} onChange={handleChange} required placeholder="Masukkan nama lengkap sesuai identitas..." className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 border border-gray-200 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 text-gray-900 transition-all"/>
+                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Nama Pemesan <span className="text-red-500">*</span></label>
+                    <input type="text" value={form.namaPemesan} onChange={(e) => setForm({ ...form, namaPemesan: e.target.value })} required placeholder="Nama lengkap pemesan" className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 border border-gray-200 focus:outline-none focus:border-primary-500 text-gray-900 transition-all" />
                   </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Alamat Email</label>
-                      <input type="email" name="email" value={form.email} onChange={handleChange} required placeholder="contoh@domain.com" className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 border border-gray-200 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 text-gray-900 transition-all"/>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Nomor Telepon (WhatsApp)</label>
-                      <input type="tel" name="telepon" value={form.telepon} onChange={handleChange} required placeholder="0812xxxxxxxx" className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 border border-gray-200 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 text-gray-900 transition-all"/>
-                    </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Nama Pemesan Ke-2 (Opsional)</label>
+                    <input type="text" value={form.namaPemesan2} onChange={(e) => setForm({ ...form, namaPemesan2: e.target.value })} placeholder="Nama lengkap pemesan kedua" className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 border border-gray-200 focus:outline-none focus:border-primary-500 text-gray-900 transition-all" />
                   </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Nomor WhatsApp <span className="text-red-500">*</span></label>
+                    <input type="tel" value={form.noWa} onChange={(e) => setForm({ ...form, noWa: e.target.value })} required placeholder="0812xxxxxxxx" className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 border border-gray-200 focus:outline-none focus:border-primary-500 text-gray-900 transition-all" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Email <span className="text-red-500">*</span></label>
+                    <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required placeholder="contoh@domain.com" className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 border border-gray-200 focus:outline-none focus:border-primary-500 text-gray-900 transition-all" />
+                  </div>
+                  <div className="flex gap-3">
+                    <button onClick={handlePrev} className="flex-1 py-4 rounded-2xl bg-gray-100 text-gray-700 font-bold hover:bg-gray-200 transition-colors">Kembali</button>
+                    <button onClick={handleNext} className="flex-1 py-4 rounded-2xl bg-primary-600 text-white font-bold hover:bg-primary-700 transition-colors">Selanjutnya</button>
+                  </div>
+                </div>
+              )}
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Pilih Paket Destinasi</label>
-                      <select name="paket" value={form.paket} onChange={handleChange} className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 border border-gray-200 focus:outline-none focus:border-primary-500 text-gray-900 font-medium transition-all">
-                        {dbPackages.length > 0 ? dbPackages.map((pkg) => (
-                          <option key={pkg.id} value={pkg.id}>
-                            {pkg.name} ({pkg.duration})
-                          </option>
-                        )) : (
-                          <>
-                            <option value="ubud">Ubud Culture & Nature Escape (4D3N)</option>
-                            <option value="raja_ampat">Raja Ampat Diving Expeditions (5D4N)</option>
-                            <option value="labuan_bajo">Labuan Bajo Islands Explorer (4D3N)</option>
-                          </>
+              {/* Step 3: Pemilihan Paket & Villa */}
+              {step === 3 && (
+                <div className="space-y-6">
+                  <h2 className="text-xl font-bold text-gray-900">Pilih Paket & Jadwal</h2>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Pilih Paket Wisata <span className="text-red-500">*</span></label>
+                    <select value={form.paketId} onChange={(e) => setForm({ ...form, paketId: e.target.value })} required className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 border border-gray-200 focus:outline-none focus:border-primary-500 text-gray-900 transition-all">
+                      <option value="">-- Pilih Paket --</option>
+                      {wisataPackages.map((pkg) => (
+                        <option key={pkg.id} value={pkg.id}>{pkg.name} - {pkg.duration}</option>
+                      ))}
+                    </select>
+                    {selectedPaket && (
+                      <div className="mt-4 bg-primary-50 border border-primary-200 rounded-2xl p-5 flex items-start gap-4">
+                        {selectedPaket.imageUrl && (
+                          <div className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 bg-white">
+                            <img src={selectedPaket.imageUrl} alt={selectedPaket.name} className="w-full h-full object-cover" />
+                          </div>
                         )}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Tanggal Keberangkatan</label>
-                      <input type="date" name="tanggal" value={form.tanggal} onChange={handleChange} required className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 border border-gray-200 focus:outline-none focus:border-primary-500 text-gray-900 transition-all"/>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Jumlah Tamu (Orang)</label>
-                    <div className="flex items-center gap-4">
-                      <button type="button" onClick={() => setForm((prev) => ({ ...prev, tamu: Math.max(1, prev.tamu - 1) }))} className="w-12 h-12 rounded-xl border border-gray-200 hover:border-primary-500 flex items-center justify-center font-bold text-lg text-gray-700 bg-white transition-colors">-</button>
-                      <input type="number" name="tamu" value={form.tamu} onChange={handleChange} min="1" required className="w-16 h-12 border border-gray-200 rounded-xl text-center font-bold text-lg text-gray-900 bg-gray-50 focus:outline-none"/>
-                      <button type="button" onClick={() => setForm((prev) => ({ ...prev, tamu: prev.tamu + 1 }))} className="w-12 h-12 rounded-xl border border-gray-200 hover:border-primary-500 flex items-center justify-center font-bold text-lg text-gray-700 bg-white transition-colors">+</button>
-                    </div>
-                  </div>
-
-                  <button type="submit" className="w-full py-4 rounded-2xl bg-gradient-to-r from-primary-600 to-accent-600 text-white font-bold hover:shadow-lg hover:shadow-primary-500/25 transition-all text-center text-base">Konfirmasi & Pesan Sekarang</button>
-                </form>
-              </div>
-
-              {/* Pricing Summary Sidepanel */}
-              <div className="lg:col-span-5 bg-white p-8 rounded-3xl border border-gray-100 shadow-xl sticky top-28">
-                <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                  <span className="w-8 h-8 rounded-lg bg-accent-100 text-accent-600 flex items-center justify-center text-sm font-bold">2</span>
-                  <span>Rincian Pembayaran</span>
-                </h2>
-
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center text-sm text-gray-500">
-                    <span>Harga per pax</span>
-                    <span className="font-semibold text-gray-900">{formatRupiah(pricing.basePrice)}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-sm text-gray-500">
-                    <span>Jumlah tamu</span>
-                    <span className="font-semibold text-gray-900">{form.tamu} Orang</span>
-                  </div>
-                  <hr className="border-gray-100"/>
-                  <div className="flex justify-between items-center text-sm text-gray-500">
-                    <span>Subtotal</span>
-                    <span className="font-semibold text-gray-900">{formatRupiah(pricing.subtotal)}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-sm text-green-600 font-medium">
-                    <span>Diskon Promo Web (10%)</span>
-                    <span>- {formatRupiah(pricing.discount)}</span>
-                  </div>
-                  <hr className="border-gray-100 my-2"/>
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <span className="text-sm font-bold text-gray-900 block">Total Pembayaran</span>
-                      <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Sudah termasuk PPN & Asuransi</span>
-                    </div>
-                    <span className="text-2xl font-extrabold text-primary-600">{formatRupiah(pricing.total)}</span>
-                  </div>
-                </div>
-
-                {/* Extra Perks Banner */}
-                <div className="mt-8 p-5 bg-gradient-to-br from-primary-50 to-accent-50 rounded-2xl border border-primary-500/10 flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-primary-100 text-primary-600 flex items-center justify-center flex-shrink-0">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-bold text-gray-900">{selectedPaket.name}</h4>
+                          <p className="text-sm text-gray-600 mt-1">{selectedPaket.duration}</p>
+                          <p className="text-sm font-semibold text-primary-600 mt-1">{selectedPaket.price ? formatRupiah(selectedPaket.price) : ""}</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <div>
-                    <h4 className="text-sm font-bold text-gray-900 mb-1">Garansi Layanan Refund</h4>
-                    <p className="text-xs text-gray-500 leading-relaxed">Dapatkan refund 100% jika pembatalan dilakukan selambat-lambatnya 7 hari sebelum keberangkatan.</p>
+                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Pilih Villa (Opsional)</label>
+                    <select value={form.villaId} onChange={(e) => setForm({ ...form, villaId: e.target.value })} className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 border border-gray-200 focus:outline-none focus:border-primary-500 text-gray-900 transition-all">
+                      <option value="">-- Tidak Memilih Villa --</option>
+                      {villaPackages.map((villa) => (
+                        <option key={villa.id} value={villa.id}>{villa.name} - {villa.duration}</option>
+                      ))}
+                    </select>
+                    {selectedVilla && (
+                      <div className="mt-4 bg-accent-50 border border-accent-200 rounded-2xl p-5 flex items-start gap-4">
+                        {selectedVilla.imageUrl && (
+                          <div className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 bg-white">
+                            <img src={selectedVilla.imageUrl} alt={selectedVilla.name} className="w-full h-full object-cover" />
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-bold text-gray-900">{selectedVilla.name}</h4>
+                          <p className="text-sm text-gray-600 mt-1">{selectedVilla.duration}</p>
+                          <p className="text-sm font-semibold text-accent-600 mt-1">{selectedVilla.price ? formatRupiah(selectedVilla.price) : ""}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Tanggal <span className="text-red-500">*</span></label>
+                    <input type="date" value={form.tanggal} onChange={(e) => setForm({ ...form, tanggal: e.target.value })} required className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 border border-gray-200 focus:outline-none focus:border-primary-500 text-gray-900 transition-all" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Jumlah Peserta</label>
+                    <input type="number" value={form.jumlahPeserta} onChange={(e) => setForm({ ...form, jumlahPeserta: Math.max(1, parseInt(e.target.value) || 1) })} min="1" className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 border border-gray-200 focus:outline-none focus:border-primary-500 text-gray-900 transition-all" />
+                  </div>
+                  <div className="flex gap-3">
+                    <button onClick={handlePrev} className="flex-1 py-4 rounded-2xl bg-gray-100 text-gray-700 font-bold hover:bg-gray-200 transition-colors">Kembali</button>
+                    <button onClick={handleNext} className="flex-1 py-4 rounded-2xl bg-primary-600 text-white font-bold hover:bg-primary-700 transition-colors">Selanjutnya</button>
                   </div>
                 </div>
-              </div>
+              )}
+
+              {/* Step 4: Total Harga & Pembayaran */}
+              {step === 4 && (
+                <div className="space-y-6">
+                  <h2 className="text-xl font-bold text-gray-900">Total Harga & Pembayaran</h2>
+
+                  {/* Info Rekening */}
+                  <div className="bg-gradient-to-br from-primary-50 to-accent-50 border border-primary-200 rounded-2xl p-6 space-y-3">
+                    <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                      <svg className="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                      </svg>
+                      Transfer Pembayaran
+                    </h3>
+                    <div className="bg-white rounded-xl p-4 border border-primary-100">
+                      <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">BCA</p>
+                      <p className="text-sm font-semibold text-gray-900">M. AJI ABDURAHMAN</p>
+                      <p className="text-lg font-black text-primary-600 tracking-wider mt-1">233-099-0417</p>
+                    </div>
+                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-2 text-sm text-gray-600">
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-gray-500">Total Harga</span>
+                        <span className="font-bold text-gray-900">{formatRupiah(form.totalHarga)}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-gray-500">DP 5%</span>
+                        <span className="font-bold text-primary-600">{formatRupiah(Math.round(form.totalHarga * 0.05))}</span>
+                      </div>
+                      <hr className="border-amber-200" />
+                      <p className="text-xs leading-relaxed">
+                        Sisa pembayaran bisa dilakukan setelah outbond. Jika DP telah masuk dan customer batal order, maka DP tidak bisa dikembalikan.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Upload Bukti Pembayaran */}
+                  <div>
+                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Upload Bukti Pembayaran <span className="text-red-500">*</span></label>
+                    <div className="border-2 border-dashed border-gray-300 rounded-2xl p-6 text-center hover:border-primary-400 transition-colors cursor-pointer" onClick={() => document.getElementById("payment-upload")?.click()}>
+                      {paymentFile ? (
+                        <div className="space-y-2">
+                          <div className="w-12 h-12 rounded-xl bg-green-100 text-green-600 flex items-center justify-center mx-auto">
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
+                          </div>
+                          <p className="text-sm font-semibold text-gray-900">{paymentFile.name}</p>
+                          <p className="text-xs text-gray-400">{(paymentFile.size / 1024).toFixed(1)} KB</p>
+                          <button onClick={(e) => { e.stopPropagation(); setPaymentFile(null); }} className="text-xs text-red-500 hover:text-red-700 font-semibold">Hapus</button>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <div className="w-12 h-12 rounded-xl bg-gray-100 text-gray-400 flex items-center justify-center mx-auto">
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
+                          </div>
+                          <p className="text-sm font-semibold text-gray-600">Klik untuk upload bukti transfer</p>
+                          <p className="text-xs text-gray-400">Format: JPG, PNG, maks 2MB</p>
+                        </div>
+                      )}
+                      <input id="payment-upload" type="file" accept="image/*" className="hidden" onChange={(e) => setPaymentFile(e.target.files?.[0] || null)} />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3">
+                    <button onClick={handlePrev} disabled={submitting} className="flex-1 py-4 rounded-2xl bg-gray-100 text-gray-700 font-bold hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">Kembali</button>
+                    <button onClick={handleSubmit} disabled={submitting} className="flex-1 py-4 rounded-2xl bg-primary-600 text-white font-bold hover:bg-primary-700 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                      {submitting && (
+                        <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                        </svg>
+                      )}
+                      {submitting ? "Mengirim..." : "Kirim Pemesanan"}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
       </main>
 
-      <Footer seo={seo} cta={{}} company={company} />
-
-      {/* Confetti Booking Success Modal */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 opacity-100 transition-opacity">
-          <div className="bg-white rounded-[40px] p-8 max-w-lg w-full text-center relative border border-gray-100 shadow-2xl overflow-hidden flex flex-col items-center">
-            {/* SVG Confetti Simulation Background */}
-            <div className="absolute inset-0 pointer-events-none z-0 opacity-40">
-              <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="50" cy="80" r="8" fill="#D97A3A" />
-                <rect x="150" y="40" width="12" height="12" fill="#E3B53A" transform="rotate(45 150 40)" />
-                <polygon points="350,150 358,162 342,162" fill="#C96A2E" />
-                <rect x="250" y="200" width="10" height="15" fill="#F0C64A" transform="rotate(30 250 200)" />
-                <circle cx="80" cy="250" r="6" fill="#D97A3A" />
-                <rect x="400" y="80" width="8" height="14" fill="#E3B53A" transform="rotate(15 400 80)" />
-              </svg>
-            </div>
-
-            <div className="relative z-10 space-y-6">
-              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center text-green-600 mx-auto text-4xl shadow-inner mb-2 animate-bounce">✓</div>
-              <h2 className="text-3xl font-extrabold text-gray-900 leading-tight">Pemesanan Sukses!</h2>
-              <p className="text-gray-500 text-sm max-w-xs mx-auto">Selamat! Kursi perjalanan impian Anda telah diamankan. Simpan kode booking Anda untuk proses verifikasi:</p>
-              
-              <div className="bg-gradient-to-br from-primary-50 to-accent-50 border border-primary-100 rounded-3xl p-6 relative">
-                <span className="text-[10px] text-primary-400 font-bold uppercase tracking-widest block mb-2">Kode Booking Anda</span>
-                <span className="text-3xl font-black text-primary-600 tracking-wider font-mono select-all">{bookingCode}</span>
-              </div>
-
-              <div className="text-xs text-gray-400/80 bg-gray-50 p-4 rounded-2xl border border-gray-100">
-                Pihak Admin {brandName} akan menghubungi Anda melalui email <b>{form.email}</b> atau WhatsApp <b>{form.telepon}</b> dalam waktu 1x24 jam untuk verifikasi pembayaran.
-              </div>
-
-              <button onClick={resetForm} className="w-full py-4 rounded-2xl bg-gray-900 hover:bg-primary-600 text-white font-bold transition-all shadow-md">Tutup & Kembali</button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Footer seo={seo} cta={{}} company={company} packages={dbPackages} />
     </div>
   );
 }

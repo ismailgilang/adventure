@@ -44,6 +44,7 @@ export const tourPackages = pgTable('tour_packages', {
   duration: text('duration').notNull(),
   description: text('description'),
   imageUrl: text('image_url'),
+  category: text('category').default('wisata').notNull(),
   status: text('status').default('DRAFT').notNull(), // 'DRAFT' | 'PUBLISHED'
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
@@ -65,7 +66,10 @@ export const bookings = pgTable('bookings', {
   bookingDate: text('booking_date').notNull(),
   totalGuests: integer('total_guests').notNull(),
   totalPrice: integer('total_price').notNull(),
-  status: text('status').default('PENDING').notNull(), // 'PENDING' | 'CONFIRMED' | 'CANCELLED'
+  namaPemesan2: text('nama_pemesan2'),
+  packageId: uuid('package_id'),
+  villaId: uuid('villa_id'),
+  status: text('status').default('booking').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -223,3 +227,15 @@ export const gallery = pgTable('gallery', {
 
 export type DBGallery = typeof gallery.$inferSelect;
 export type NewDBGallery = typeof gallery.$inferInsert;
+
+// ==========================================
+// 14. TABEL LANDING: KATA KATA HARI INI
+// ==========================================
+export const landingQuotes = pgTable('landing_quotes', {
+  id: text('id').primaryKey(), // Default: 'quotes_content'
+  title: text('title').notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export type DBLandingQuotes = typeof landingQuotes.$inferSelect;
+export type NewDBLandingQuotes = typeof landingQuotes.$inferInsert;

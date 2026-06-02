@@ -15,6 +15,7 @@ export default async function Home() {
       packages={data.packages}
       seo={data.seo}
       company={data.company}
+      quotes={data.quotes}
     />
   );
 }

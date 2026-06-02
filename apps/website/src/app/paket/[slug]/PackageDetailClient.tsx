@@ -23,9 +23,10 @@ interface PackageDetailClientProps {
   seo: any;
   company?: any;
   recommended: any[];
+  packages?: any[];
 }
 
-export default function PackageDetailClient({ pkg, seo, company, recommended }: PackageDetailClientProps) {
+export default function PackageDetailClient({ pkg, seo, company, recommended, packages }: PackageDetailClientProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const toggleMenu = () => setMenuOpen(!menuOpen);
 
@@ -197,7 +198,7 @@ export default function PackageDetailClient({ pkg, seo, company, recommended }: 
         </div>
       </main>
 
-      <Footer seo={seo} cta={{}} company={company} />
+      <Footer seo={seo} cta={{}} company={company} packages={packages} />
     </div>
   );
 }

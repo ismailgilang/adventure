@@ -18,17 +18,19 @@ export default function PackagesClient({
   company,
 }: PackagesClientProps) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [filterCategory, setFilterCategory] = useState<"wisata" | "villa">("wisata");
   const toggleMenu = () => setMenuOpen(!menuOpen);
 
-  const packagesList = packages.map((pkg) => ({
-    id: pkg.id,
-    title: pkg.name,
-    slug: pkg.slug,
-    category: ((pkg.slug && pkg.slug.includes("ubud")) || (pkg.name && pkg.name.toLowerCase().includes("ubud"))) ? "budaya" : "petualangan",
-    duration: pkg.duration,
-    price: pkg.price > 0 ? new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(pkg.price) : null,
-    image: pkg.imageUrl || "https://image.qwenlm.ai/public_source/3524cccd-e29b-4d9f-9189-5394346ea852/1254e5187-8d09-4038-9944-a45fab0e7943.png",
-  }));
+  const packagesList = packages
+    .filter((pkg) => pkg.category === filterCategory)
+    .map((pkg) => ({
+      id: pkg.id,
+      title: pkg.name,
+      slug: pkg.slug,
+      duration: pkg.duration,
+      price: pkg.price > 0 ? new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(pkg.price) : null,
+      image: pkg.imageUrl || "https://image.qwenlm.ai/public_source/3524cccd-e29b-4d9f-9189-5394346ea852/1254e5187-8d09-4038-9944-a45fab0e7943.png",
+    }));
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 flex flex-col">
@@ -41,17 +43,44 @@ export default function PackagesClient({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative text-center">
           <span className="inline-block px-4 py-1.5 rounded-full bg-primary-100 border border-primary-200 text-primary-700 text-sm font-semibold mb-4">Eksplorasi Nusantara</span>
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 tracking-tight mb-6">
-            Pilihan <span className="gradient-text">Paket Wisata</span>
+            Pilihan <span className="gradient-text">Paket {filterCategory === "wisata" ? "Wisata" : "Villa"}</span>
           </h1>
           <p className="text-gray-500 text-lg max-w-2xl mx-auto">
             Temukan berbagai destinasi eksotis dan pengalaman tak terlupakan yang telah kami rancang khusus untuk petualangan impian Anda.
           </p>
+          <div className="flex justify-center gap-3 mt-8">
+            <button
+              onClick={() => setFilterCategory("wisata")}
+              className={`px-8 py-3 rounded-full text-sm font-bold transition-all ${
+                filterCategory === "wisata"
+                  ? "bg-primary-600 text-white shadow-lg shadow-primary-600/25"
+                  : "bg-white text-gray-600 border border-gray-200 hover:border-primary-300 hover:text-primary-600"
+              }`}
+            >
+              Wisata
+            </button>
+            <button
+              onClick={() => setFilterCategory("villa")}
+              className={`px-8 py-3 rounded-full text-sm font-bold transition-all ${
+                filterCategory === "villa"
+                  ? "bg-primary-600 text-white shadow-lg shadow-primary-600/25"
+                  : "bg-white text-gray-600 border border-gray-200 hover:border-primary-300 hover:text-primary-600"
+              }`}
+            >
+              Villa
+            </button>
+          </div>
         </div>
       </header>
 
       {/* Packages Grid */}
       <main className="flex-grow py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {packagesList.length === 0 ? (
+            <div className="text-center py-20">
+              <p className="text-gray-400 text-lg">Belum ada paket {filterCategory} tersedia.</p>
+            </div>
+          ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {packagesList.map((p) => (
               <div
@@ -97,10 +126,11 @@ export default function PackagesClient({
               </div>
             ))}
           </div>
+          )}
         </div>
       </main>
 
-      <Footer seo={seo} cta={{}} company={company} />
+      <Footer seo={seo} cta={{}} company={company} packages={packages} />
     </div>
   );
 }

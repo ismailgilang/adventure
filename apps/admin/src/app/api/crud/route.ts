@@ -14,6 +14,7 @@ import {
   seoMeta,
   companyProfile,
   gallery,
+  landingQuotes,
   eq 
 } from '@adventure/database';
 import * as bcrypt from 'bcryptjs';
@@ -34,7 +35,8 @@ const tableMap: Record<string, any> = {
   cta: landingCta,
   meta: seoMeta,
   company: companyProfile,
-  gallery
+  gallery,
+  quotes: landingQuotes
 };
 
 export async function GET(request: Request) {
@@ -82,8 +84,8 @@ export async function POST(request: Request) {
     }
 
     // Untuk tabel satu baris (single record config)
-    if (tableName === 'hero' || tableName === 'about' || tableName === 'cta' || tableName === 'meta' || tableName === 'company') {
-      const recordId = body.id || (tableName === 'company' ? 'company_config' : `${tableName}_content`);
+    if (tableName === 'hero' || tableName === 'about' || tableName === 'cta' || tableName === 'meta' || tableName === 'company' || tableName === 'quotes') {
+      const recordId = body.id || (tableName === 'company' ? 'company_config' : tableName === 'quotes' ? 'quotes_content' : `${tableName}_content`);
       const existing = await db.select().from(tableSchema).where(eq(tableSchema.id, recordId));
       if (existing.length > 0) {
         const updated = await db.update(tableSchema)

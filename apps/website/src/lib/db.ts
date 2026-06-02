@@ -36,6 +36,7 @@ export const tourPackages = pgTable('tour_packages', {
   price: integer('price').notNull(),
   duration: text('duration').notNull(),
   imageUrl: text('image_url'),
+  category: text('category').default('wisata').notNull(),
   status: text('status').default('DRAFT').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
@@ -44,16 +45,19 @@ export const tourPackages = pgTable('tour_packages', {
 export const bookings = pgTable('bookings', {
   id: uuid('id').defaultRandom().primaryKey(),
   bookingCode: text('booking_code').unique().notNull(),
+  packageName: text('package_name').notNull(),
   customerName: text('customer_name').notNull(),
   customerEmail: text('customer_email').notNull(),
   customerPhone: text('customer_phone').notNull(),
-  packageId: uuid('package_id').notNull(),
-  packageName: text('package_name').notNull(),
+  bookingDate: text('booking_date').notNull(),
   totalGuests: integer('total_guests').notNull(),
   totalPrice: integer('total_price').notNull(),
-  bookingDate: text('booking_date').notNull(),
-  status: text('status').default('PENDING').notNull(),
+  namaPemesan2: text('nama_pemesan2'),
+  packageId: uuid('package_id'),
+  villaId: uuid('villa_id'),
+  status: text('status').default('booking').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
 export const landingHero = pgTable('landing_hero', {
@@ -153,6 +157,12 @@ export const gallery = pgTable('gallery', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
+export const landingQuotes = pgTable('landing_quotes', {
+  id: text('id').primaryKey(),
+  title: text('title').notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
 export type DBArticle = typeof articles.$inferSelect;
 
 // ==========================================
@@ -180,7 +190,8 @@ export function createDb() {
       landingCta,
       seoMeta,
       companyProfile,
-      gallery
+      gallery,
+      landingQuotes
     } 
   });
 }

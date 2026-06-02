@@ -9,6 +9,7 @@ import Packages from "@/components/landing/Packages";
 import Features from "@/components/landing/Features";
 import Testimonials from "@/components/landing/Testimonials";
 import Team from "@/components/landing/Team";
+import Quote from "@/components/landing/Quote";
 import CTA from "@/components/landing/CTA";
 import Footer from "@/components/layout/Footer";
 import BackToTop from "@/components/layout/BackToTop";
@@ -23,6 +24,7 @@ interface HomeClientProps {
   packages: any[];
   seo: any;
   company: any;
+  quotes: any;
 }
 
 export default function HomeClient({
@@ -35,6 +37,7 @@ export default function HomeClient({
   packages,
   seo,
   company,
+  quotes,
 }: HomeClientProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [navScrolled, setNavScrolled] = useState(false);
@@ -154,6 +157,7 @@ export default function HomeClient({
       
       <main>
         <Hero hero={hero} countersRef={countersRef} />
+        <Quote quotes={quotes} />
         <About about={about} />
         <Packages packagesList={packagesList} />
         <Features features={features} />
@@ -162,7 +166,7 @@ export default function HomeClient({
         <CTA cta={finalCta} />
       </main>
 
-      <Footer seo={seo} cta={finalCta} company={company} />
+      <Footer seo={seo} cta={finalCta} company={company} packages={packages} />
       <BackToTop visible={backToTopVisible} />
     </div>
   );

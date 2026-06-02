@@ -6,9 +6,10 @@ interface FooterProps {
   seo?: any;
   cta: any;
   company?: any;
+  packages?: any[];
 }
 
-export default function Footer({ seo, cta, company }: FooterProps) {
+export default function Footer({ seo, cta, company, packages }: FooterProps) {
   const waNumber = company?.whatsapp ? company.whatsapp.replace(/[^0-9]/g, "") : "628123456789";
   const waUrl = company?.whatsapp ? `https://wa.me/${waNumber}` : (cta.buttonUrl || "https://wa.me/628123456789");
 
@@ -95,21 +96,23 @@ export default function Footer({ seo, cta, company }: FooterProps) {
           <div>
             <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-5">Paket Wisata</h4>
             <ul className="space-y-3">
-              {[
-                "Ubud Culture & Nature",
-                "Raja Ampat Diving",
-                "Labuan Bajo Explorer",
-                "Lombok Adventure",
-                "Bromo Sunrise Trek",
-                "Komodo Island Tour",
-              ].map((item) => (
-                <li key={item}>
+              {(packages && packages.length > 0
+                ? packages.filter((p: any) => p.category === "wisata").slice(0, 5)
+                : [
+                    { name: "Ubud Culture & Nature", slug: "ubud-culture" },
+                    { name: "Raja Ampat Diving", slug: "raja-ampat" },
+                    { name: "Labuan Bajo Explorer", slug: "labuan-bajo" },
+                    { name: "Lombok Adventure", slug: "lombok" },
+                    { name: "Bromo Sunrise Trek", slug: "bromo" },
+                  ]
+              ).map((item: any) => (
+                <li key={item.slug || item}>
                   <Link
-                    href="/paket"
+                    href={`/paket/${item.slug || ""}`}
                     className="text-gray-400 hover:text-primary-600 text-sm transition-colors flex items-center gap-1.5 group"
                   >
                     <span className="w-0 group-hover:w-3 h-0.5 bg-primary-500 transition-all duration-300 rounded-full"></span>
-                    {item}
+                    {item.name || item}
                   </Link>
                 </li>
               ))}

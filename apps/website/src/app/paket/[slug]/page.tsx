@@ -60,6 +60,7 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
       recommended={recommended} 
       seo={landingData.seo} 
       company={landingData.company}
+      packages={landingData.packages}
     />
   );
 }

@@ -10,12 +10,14 @@ interface GalleryClientProps {
   galleryItems: any[];
   seo: any;
   company: any;
+  packages?: any[];
 }
 
 export default function GalleryClient({
   galleryItems,
   seo,
   company,
+  packages,
 }: GalleryClientProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [filter, setFilter] = useState("ALL");
@@ -110,7 +112,7 @@ export default function GalleryClient({
         </div>
       </main>
 
-      <Footer seo={seo} cta={{}} company={company} />
+      <Footer seo={seo} cta={{}} company={company} packages={packages} />
     </div>
   );
 }

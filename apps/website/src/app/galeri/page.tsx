@@ -12,6 +12,7 @@ export default async function GalleryPage() {
       galleryItems={galleryItems}
       seo={landingData.seo}
       company={landingData.company}
+      packages={landingData.packages}
     />
   );
 }

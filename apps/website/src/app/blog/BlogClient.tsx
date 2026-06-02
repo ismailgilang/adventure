@@ -10,12 +10,14 @@ interface BlogClientProps {
   articles: any[];
   seo: any;
   company: any;
+  packages?: any[];
 }
 
 export default function BlogClient({
   articles,
   seo,
   company,
+  packages,
 }: BlogClientProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const toggleMenu = () => setMenuOpen(!menuOpen);
@@ -104,7 +106,7 @@ export default function BlogClient({
         </div>
       </main>
 
-      <Footer seo={seo} cta={{}} company={company} />
+      <Footer seo={seo} cta={{}} company={company} packages={packages} />
     </div>
   );
 }
