@@ -92,7 +92,10 @@ export default function PackageDetailClient({ pkg, seo, company, recommended, pa
                   <div>
                     <span className="text-gray-400 text-xs font-bold uppercase tracking-widest block mb-2">Harga Paket</span>
                     <div className="flex items-baseline gap-2">
-                      <span className="text-4xl font-black text-primary-600">{priceFormatted}</span>
+                      <span className="text-4xl font-black text-primary-600">
+                        {priceFormatted}
+                        <span className="text-gray-400 text-sm font-normal"> / {pkg.priceLabel || (pkg.category === "wisata" ? "per orang" : "per malam")}</span>
+                      </span>
                     </div>
                   </div>
                 )}
@@ -101,14 +104,17 @@ export default function PackageDetailClient({ pkg, seo, company, recommended, pa
                   <h3 className="font-bold text-gray-900">Syarat & Ketentuan:</h3>
 
                   <ul className="space-y-3">
-                    {[
-                      "Check-in mulai pukul 14:00 WIB",
-                      "Check-out maksimal pukul 12:00 WIB",
-                      "DP minimal 50% untuk konfirmasi booking",
-                      "Pembatalan H-3 tidak dapat refund",
-                      "Menjaga kebersihan dan fasilitas villa",
-                      "Dilarang membawa barang berbahaya atau terlarang"
-                    ].map((item, idx) => (
+                    {(pkg.dpPercentage === 30 ? [
+                      "Wajib membayar Down Payment (DP) sebesar 30% dari total biaya untuk reservasi",
+                      "DP yang telah dibayarkan untuk Paket Wisata Silver Plus, Gold Plus, dan Diamond Plus tidak dapat dikembalikan (non-refundable) apabila terjadi pembatalan dari pihak tamu dengan alasan apa pun.",
+                      "Jadwal reservasi akan diblokir setelah konfirmasi pembayaran diterima",
+                      "Mematuhi segala tata tertib dan panduan keselamatan selama kegiatan"
+                    ] : [
+                      "Wajib membayar Down Payment (DP) sebesar 5% dari total biaya untuk reservasi",
+                      "Untuk reservasi dengan DP 5%, ketentuan pengembalian atau pengalihan jadwal akan mengikuti kebijakan yang berlaku dan kesepakatan kedua belah pihak.",
+                      "Jadwal reservasi akan diblokir setelah konfirmasi pembayaran diterima",
+                      "Mematuhi segala tata tertib dan panduan keselamatan selama kegiatan"
+                    ]).map((item, idx) => (
                       <li
                         key={idx}
                         className="flex items-start gap-3 text-sm text-gray-600"

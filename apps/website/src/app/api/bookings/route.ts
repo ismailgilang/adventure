@@ -56,3 +56,18 @@ export async function POST(request: Request) {
     }, { status: 500 });
   }
 }
+
+export async function GET() {
+  try {
+    const db = createDb();
+    // Fetch all active booking dates that are not cancelled
+    const activeBookings = await db
+      .select({ bookingDate: bookings.bookingDate })
+      .from(bookings);
+    
+    const bookedDates = activeBookings.map((b: any) => b.bookingDate);
+    return NextResponse.json({ success: true, data: bookedDates });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+  }
+}

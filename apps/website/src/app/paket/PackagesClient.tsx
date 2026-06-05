@@ -29,6 +29,7 @@ export default function PackagesClient({
       slug: pkg.slug,
       duration: pkg.duration,
       price: pkg.price > 0 ? new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(pkg.price) : null,
+      priceLabel: pkg.priceLabel || (filterCategory === "wisata" ? "per orang" : "per malam"),
       image: pkg.imageUrl || "https://image.qwenlm.ai/public_source/3524cccd-e29b-4d9f-9189-5394346ea852/1254e5187-8d09-4038-9944-a45fab0e7943.png",
     }));
 
@@ -103,7 +104,10 @@ export default function PackagesClient({
                       {p.price ? (
                         <div>
                           <span className="text-gray-400 text-[10px] uppercase font-bold block">Mulai dari</span>
-                          <span className="text-lg font-extrabold text-primary-600">{p.price}</span>
+                          <span className="text-lg font-extrabold text-primary-600">
+                            {p.price}
+                            <span className="text-gray-400 text-xs font-normal"> / {p.priceLabel}</span>
+                          </span>
                         </div>
                       ) : (
                         <div className="h-10"></div>

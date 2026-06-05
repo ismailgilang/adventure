@@ -37,6 +37,7 @@ export default function MobileMenu({ menuOpen, toggleMenu }: MobileMenuProps) {
         <div className="flex flex-col gap-4">
           <Link href="/" onClick={toggleMenu} className="text-lg font-medium text-gray-700 hover:text-primary-600 py-2 transition-colors">Beranda</Link>
           <Link href="/paket" onClick={toggleMenu} className="text-lg font-medium text-gray-700 hover:text-primary-600 py-2 transition-colors">Paket Wisata</Link>
+          <Link href="/kalender" onClick={toggleMenu} className="text-lg font-medium text-gray-700 hover:text-primary-600 py-2 transition-colors">Kalender</Link>
           <Link href="/galeri" onClick={toggleMenu} className="text-lg font-medium text-gray-700 hover:text-primary-600 py-2 transition-colors">Galeri</Link>
           <Link href="/blog" onClick={toggleMenu} className="text-lg font-medium text-gray-700 hover:text-primary-600 py-2 transition-colors">Blog</Link>
           <hr className="border-gray-200 my-2" />

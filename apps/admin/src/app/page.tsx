@@ -33,15 +33,15 @@ export default function AdminPage() {
   const [about, setAbout] = useState<any>({ title: "", subtitle: "", description: "", statsGuests: "", statsDestinations: "", statsGuides: "", imageUrl: "" });
   const [quotes, setQuotes] = useState<any>({ title: "" });
   const [cta, setCta] = useState<any>({ title: "", subtitle: "", buttonText: "", buttonUrl: "" });
-  const [seo, setSeo] = useState<any>({ 
-    title: "", 
-    description: "", 
-    keywords: "", 
-    logoUrl: "", 
-    faviconUrl: "", 
-    ogTitle: "", 
-    ogDescription: "", 
-    ogImage: "", 
+  const [seo, setSeo] = useState<any>({
+    title: "",
+    description: "",
+    keywords: "",
+    logoUrl: "",
+    faviconUrl: "",
+    ogTitle: "",
+    ogDescription: "",
+    ogImage: "",
     twitterCard: "summary_large_image",
     canonicalUrl: "",
     robots: "index, follow"
@@ -67,7 +67,7 @@ export default function AdminPage() {
   const [deleteConfirm, setDeleteConfirm] = useState<{ table: string; id: string } | null>(null);
 
   // Form input bindings
-  const [pkgForm, setPkgForm] = useState({ name: "", price: 0, duration: "", description: "", imageUrl: "", category: "wisata", status: "DRAFT" });
+  const [pkgForm, setPkgForm] = useState({ name: "", price: 0, duration: "", description: "", imageUrl: "", category: "wisata", status: "DRAFT", dpPercentage: 5, priceLabel: "per orang" });
   const [artForm, setArtForm] = useState({ title: "", content: "", imageUrl: "", status: "DRAFT" });
   const [teamForm, setTeamForm] = useState({ name: "", role: "", imageUrl: "", instagramUrl: "" });
   const [testForm, setTestForm] = useState({ name: "", role: "", review: "", rating: 5, imageUrl: "" });
@@ -272,7 +272,7 @@ export default function AdminPage() {
     setModalType(type);
     setEditItem(null);
     // Reset forms
-    setPkgForm({ name: "", price: 0, duration: "", description: "", imageUrl: "", category: "wisata", status: "DRAFT" });
+    setPkgForm({ name: "", price: 0, duration: "", description: "", imageUrl: "", category: "wisata", status: "DRAFT", dpPercentage: 5, priceLabel: "per orang" });
     setArtForm({ title: "", content: "", imageUrl: "", status: "DRAFT" });
     setTeamForm({ name: "", role: "", imageUrl: "", instagramUrl: "" });
     setTestForm({ name: "", role: "", review: "", rating: 5, imageUrl: "" });
@@ -442,8 +442,8 @@ export default function AdminPage() {
             <button
               onClick={() => setActiveTab("dashboard")}
               className={`w-full py-3 px-4 rounded-xl flex items-center gap-3 text-sm font-semibold transition-all cursor-pointer ${activeTab === "dashboard"
-                  ? "bg-indigo-50 text-indigo-600 border border-indigo-100 shadow-sm"
-                  : "text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-transparent"
+                ? "bg-indigo-50 text-indigo-600 border border-indigo-100 shadow-sm"
+                : "text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-transparent"
                 }`}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z" /></svg>
@@ -452,8 +452,8 @@ export default function AdminPage() {
             <button
               onClick={() => setActiveTab("packages")}
               className={`w-full py-3 px-4 rounded-xl flex items-center gap-3 text-sm font-semibold transition-all cursor-pointer ${activeTab === "packages"
-                  ? "bg-indigo-50 text-indigo-600 border border-indigo-100 shadow-sm"
-                  : "text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-transparent"
+                ? "bg-indigo-50 text-indigo-600 border border-indigo-100 shadow-sm"
+                : "text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-transparent"
                 }`}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
@@ -462,8 +462,8 @@ export default function AdminPage() {
             <button
               onClick={() => setActiveTab("articles")}
               className={`w-full py-3 px-4 rounded-xl flex items-center gap-3 text-sm font-semibold transition-all cursor-pointer ${activeTab === "articles"
-                  ? "bg-indigo-50 text-indigo-600 border border-indigo-100 shadow-sm"
-                  : "text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-transparent"
+                ? "bg-indigo-50 text-indigo-600 border border-indigo-100 shadow-sm"
+                : "text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-transparent"
                 }`}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" /></svg>
@@ -472,8 +472,8 @@ export default function AdminPage() {
             <button
               onClick={() => setActiveTab("bookings")}
               className={`w-full py-3 px-4 rounded-xl flex items-center gap-3 text-sm font-semibold transition-all cursor-pointer ${activeTab === "bookings"
-                  ? "bg-indigo-50 text-indigo-600 border border-indigo-100 shadow-sm"
-                  : "text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-transparent"
+                ? "bg-indigo-50 text-indigo-600 border border-indigo-100 shadow-sm"
+                : "text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-transparent"
                 }`}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
@@ -487,8 +487,8 @@ export default function AdminPage() {
             <button
               onClick={() => setActiveTab("company")}
               className={`w-full py-3 px-4 rounded-xl flex items-center gap-3 text-sm font-semibold transition-all cursor-pointer ${activeTab === "company"
-                  ? "bg-indigo-50 text-indigo-600 border border-indigo-100 shadow-sm"
-                  : "text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-transparent"
+                ? "bg-indigo-50 text-indigo-600 border border-indigo-100 shadow-sm"
+                : "text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-transparent"
                 }`}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
@@ -498,8 +498,8 @@ export default function AdminPage() {
             <button
               onClick={() => setActiveTab("gallery")}
               className={`w-full py-3 px-4 rounded-xl flex items-center gap-3 text-sm font-semibold transition-all cursor-pointer ${activeTab === "gallery"
-                  ? "bg-indigo-50 text-indigo-600 border border-indigo-100 shadow-sm"
-                  : "text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-transparent"
+                ? "bg-indigo-50 text-indigo-600 border border-indigo-100 shadow-sm"
+                : "text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-transparent"
                 }`}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
@@ -509,8 +509,8 @@ export default function AdminPage() {
             <button
               onClick={() => setActiveTab("landing")}
               className={`w-full py-3 px-4 rounded-xl flex items-center gap-3 text-sm font-semibold transition-all cursor-pointer ${activeTab === "landing"
-                  ? "bg-indigo-50 text-indigo-600 border border-indigo-100 shadow-sm"
-                  : "text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-transparent"
+                ? "bg-indigo-50 text-indigo-600 border border-indigo-100 shadow-sm"
+                : "text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-transparent"
                 }`}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>
@@ -519,8 +519,8 @@ export default function AdminPage() {
             <button
               onClick={() => setActiveTab("users")}
               className={`w-full py-3 px-4 rounded-xl flex items-center gap-3 text-sm font-semibold transition-all cursor-pointer ${activeTab === "users"
-                  ? "bg-indigo-50 text-indigo-600 border border-indigo-100 shadow-sm"
-                  : "text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-transparent"
+                ? "bg-indigo-50 text-indigo-600 border border-indigo-100 shadow-sm"
+                : "text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-transparent"
                 }`}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
@@ -529,8 +529,8 @@ export default function AdminPage() {
             <button
               onClick={() => setActiveTab("seo")}
               className={`w-full py-3 px-4 rounded-xl flex items-center gap-3 text-sm font-semibold transition-all cursor-pointer ${activeTab === "seo"
-                  ? "bg-indigo-50 text-indigo-600 border border-indigo-100 shadow-sm"
-                  : "text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-transparent"
+                ? "bg-indigo-50 text-indigo-600 border border-indigo-100 shadow-sm"
+                : "text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-transparent"
                 }`}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" /></svg>
@@ -683,7 +683,8 @@ export default function AdminPage() {
                   <tr className="border-b border-slate-200 text-slate-400 text-xs font-bold uppercase tracking-wider bg-white/30">
                     <th className="p-6">Nama Paket</th>
                     <th className="p-6">Durasi</th>
-                    <th className="p-6">Harga Per Pax</th>
+                    <th className="p-6">Harga & Satuan</th>
+                    <th className="p-6">Aturan Pembayaran DP</th>
                     <th className="p-6 text-center">Status</th>
                     <th className="p-6 text-right">Aksi</th>
                   </tr>
@@ -693,8 +694,12 @@ export default function AdminPage() {
                     <tr key={pkg.id} className="hover:bg-white/40 transition-colors">
                       <td className="p-6 font-bold text-slate-800 text-sm">{pkg.name}</td>
                       <td className="p-6 text-slate-500 text-sm">{pkg.duration}</td>
-                      <td className="p-6 text-sm text-indigo-600 font-mono font-bold">
-                        {formatRupiah(pkg.price)}
+                      <td className="p-6 text-sm text-slate-700 font-bold">
+                        <span className="text-indigo-600 font-mono">{formatRupiah(pkg.price)}</span>
+                        <span className="text-slate-400 text-xs font-normal"> / {pkg.priceLabel || "per orang"}</span>
+                      </td>
+                      <td className="p-6 text-slate-600 text-sm font-semibold">
+                        DP {pkg.dpPercentage || 5}%
                       </td>
                       <td className="p-6 text-center">
                         <span className={`px-3 py-1 rounded-full text-xs font-bold ${pkg.status === "PUBLISHED" ? "bg-emerald-50 text-emerald-600 border border-emerald-100" : "bg-slate-100 text-slate-400"}`}>
@@ -835,11 +840,10 @@ export default function AdminPage() {
                         <select
                           value={b.status}
                           onChange={(e) => handleBookingStatusChange(b.id, e.target.value)}
-                          className={`px-3 py-1 rounded-full text-xs font-bold focus:outline-none border border-transparent cursor-pointer ${
-                            b.status === "selesai" ? "bg-emerald-50 text-emerald-600" :
-                            b.status === "dibatalkan" ? "bg-red-50 text-red-600" :
-                            b.status === "proses" ? "bg-blue-50 text-blue-600" : "bg-amber-50 text-amber-600"
-                          }`}
+                          className={`px-3 py-1 rounded-full text-xs font-bold focus:outline-none border border-transparent cursor-pointer ${b.status === "selesai" ? "bg-emerald-50 text-emerald-600" :
+                              b.status === "dibatalkan" ? "bg-red-50 text-red-600" :
+                                b.status === "proses" ? "bg-blue-50 text-blue-600" : "bg-amber-50 text-amber-600"
+                            }`}
                         >
                           <option value="booking">Booking</option>
                           <option value="proses">Proses</option>
@@ -982,9 +986,8 @@ export default function AdminPage() {
                 <button
                   key={sub}
                   onClick={() => setActiveLandingSubTab(sub)}
-                  className={`px-6 py-3 font-semibold text-xs uppercase tracking-wider border-b-2 transition-all cursor-pointer ${
-                    activeLandingSubTab === sub ? "border-indigo-600 text-indigo-600" : "border-transparent text-slate-400 hover:text-slate-800"
-                  }`}
+                  className={`px-6 py-3 font-semibold text-xs uppercase tracking-wider border-b-2 transition-all cursor-pointer ${activeLandingSubTab === sub ? "border-indigo-600 text-indigo-600" : "border-transparent text-slate-400 hover:text-slate-800"
+                    }`}
                 >
                   {sub === "hero" && "Hero Section"}
                   {sub === "about" && "Tentang Kami"}
@@ -1386,6 +1389,19 @@ export default function AdminPage() {
                         <option value="DRAFT">DRAFT</option>
                         <option value="PUBLISHED">PUBLISHED</option>
                       </select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Ketentuan DP (%)</label>
+                      <select value={pkgForm.dpPercentage || 5} onChange={(e) => setPkgForm({ ...pkgForm, dpPercentage: parseInt(e.target.value) || 5 })} className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-sm">
+                        <option value="5">DP 5%</option>
+                        <option value="30">DP 30%</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Satuan Unit Harga (e.g. per orang)</label>
+                      <input type="text" value={pkgForm.priceLabel || "per orang"} onChange={(e) => setPkgForm({ ...pkgForm, priceLabel: e.target.value })} placeholder="e.g. per orang, per paket, per malam" required className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-sm" />
                     </div>
                   </div>
                 </>

@@ -41,10 +41,12 @@ export const tourPackages = pgTable('tour_packages', {
   name: text('name').notNull(),
   slug: text('slug').unique().notNull(),
   price: integer('price').notNull(),
+  priceLabel: text('price_label').default('per orang').notNull(),
   duration: text('duration').notNull(),
   description: text('description'),
   imageUrl: text('image_url'),
   category: text('category').default('wisata').notNull(),
+  dpPercentage: integer('dp_percentage').default(5).notNull(),
   status: text('status').default('DRAFT').notNull(), // 'DRAFT' | 'PUBLISHED'
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),

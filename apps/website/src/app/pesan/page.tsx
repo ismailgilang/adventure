@@ -6,16 +6,20 @@ import Navbar from "@/components/layout/Navbar";
 import MobileMenu from "@/components/layout/MobileMenu";
 import Footer from "@/components/layout/Footer";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { DatePicker } from "@/components/ui/DatePicker";
 
 export default function PesanPage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [dbPackages, setDbPackages] = useState<any[]>([]);
+  const [bookedDates, setBookedDates] = useState<string[]>([]);
   const [seo, setSeo] = useState<any>(null);
   const [company, setCompany] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [step, setStep] = useState(1);
   const [paymentFile, setPaymentFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [termsAgreed, setTermsAgreed] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
 
   const [form, setForm] = useState({
     namaPemesan: "",
@@ -33,16 +37,21 @@ export default function PesanPage() {
 
   useEffect(() => {
     setLoading(true);
-    fetch("/api/landing")
-      .then((res) => res.json())
-      .then((res) => {
-        if (res.success && res.data) {
-          if (res.data.seo) setSeo(res.data.seo);
-          if (res.data.company) setCompany(res.data.company);
-          if (res.data.packages) setDbPackages(res.data.packages);
+    Promise.all([
+      fetch("/api/landing").then((res) => res.json()),
+      fetch("/api/bookings").then((res) => res.json())
+    ])
+      .then(([landingRes, bookingsRes]) => {
+        if (landingRes.success && landingRes.data) {
+          if (landingRes.data.seo) setSeo(landingRes.data.seo);
+          if (landingRes.data.company) setCompany(landingRes.data.company);
+          if (landingRes.data.packages) setDbPackages(landingRes.data.packages);
+        }
+        if (bookingsRes.success && bookingsRes.data) {
+          setBookedDates(bookingsRes.data);
         }
       })
-      .catch((err) => console.error("Gagal mengambil data landing:", err))
+      .catch((err) => console.error("Gagal mengambil data:", err))
       .finally(() => setLoading(false));
   }, []);
 
@@ -67,6 +76,10 @@ export default function PesanPage() {
     }
     if (step === 3 && (!form.paketId || !form.tanggal)) {
       toast.error("Harap pilih paket wisata dan tanggal!");
+      return;
+    }
+    if (step === 3 && bookedDates.includes(form.tanggal)) {
+      toast.error("Tanggal yang Anda pilih sudah terisi jadwal lain. Harap pilih tanggal lain!");
       return;
     }
     if (step === 3) {
@@ -172,6 +185,13 @@ export default function PesanPage() {
       setSubmitting(false);
     }
   };
+
+  const paketTotal = (selectedPaket?.price || 0) * form.jumlahPeserta;
+  const villaTotal = selectedVilla?.price || 0;
+  const dpPaket = Math.round(paketTotal * ((selectedPaket?.dpPercentage || 5) / 100));
+  const dpVilla = Math.round(villaTotal * ((selectedVilla?.dpPercentage || 5) / 100));
+  const totalDP = dpPaket + dpVilla;
+  const has30Percent = selectedPaket?.dpPercentage === 30 || selectedVilla?.dpPercentage === 30;
 
   const brandName = company?.name || "Villa Situ Cileunca";
 
@@ -292,7 +312,10 @@ export default function PesanPage() {
                         <div className="flex-1 min-w-0">
                           <h4 className="font-bold text-gray-900">{selectedPaket.name}</h4>
                           <p className="text-sm text-gray-600 mt-1">{selectedPaket.duration}</p>
-                          <p className="text-sm font-semibold text-primary-600 mt-1">{selectedPaket.price ? formatRupiah(selectedPaket.price) : ""}</p>
+                          <p className="text-sm font-semibold text-primary-600 mt-1">
+                            {selectedPaket.price ? formatRupiah(selectedPaket.price) : ""}
+                            <span className="text-gray-400 text-xs font-normal"> / {selectedPaket.priceLabel || "per orang"}</span>
+                          </p>
                         </div>
                       </div>
                     )}
@@ -315,14 +338,21 @@ export default function PesanPage() {
                         <div className="flex-1 min-w-0">
                           <h4 className="font-bold text-gray-900">{selectedVilla.name}</h4>
                           <p className="text-sm text-gray-600 mt-1">{selectedVilla.duration}</p>
-                          <p className="text-sm font-semibold text-accent-600 mt-1">{selectedVilla.price ? formatRupiah(selectedVilla.price) : ""}</p>
+                          <p className="text-sm font-semibold text-accent-600 mt-1">
+                            {selectedVilla.price ? formatRupiah(selectedVilla.price) : ""}
+                            <span className="text-gray-400 text-xs font-normal"> / {selectedVilla.priceLabel || "per malam"}</span>
+                          </p>
                         </div>
                       </div>
                     )}
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Tanggal <span className="text-red-500">*</span></label>
-                    <input type="date" value={form.tanggal} onChange={(e) => setForm({ ...form, tanggal: e.target.value })} required className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 border border-gray-200 focus:outline-none focus:border-primary-500 text-gray-900 transition-all" />
+                    <DatePicker
+                      value={form.tanggal}
+                      onChange={(selectedDate) => setForm({ ...form, tanggal: selectedDate })}
+                      disabledDates={bookedDates}
+                    />
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Jumlah Peserta</label>
@@ -359,12 +389,22 @@ export default function PesanPage() {
                         <span className="font-bold text-gray-900">{formatRupiah(form.totalHarga)}</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-xs text-gray-500">DP 5%</span>
-                        <span className="font-bold text-primary-600">{formatRupiah(Math.round(form.totalHarga * 0.05))}</span>
+                        <span className="text-xs text-gray-500">Total DP (Sesuai Ketentuan)</span>
+                        <span className="font-bold text-primary-600">
+                          {formatRupiah(totalDP)}
+                        </span>
                       </div>
                       <hr className="border-amber-200" />
                       <p className="text-xs leading-relaxed">
-                        Sisa pembayaran bisa dilakukan setelah outbond. Jika DP telah masuk dan customer batal order, maka DP tidak bisa dikembalikan.
+                        {has30Percent ? (
+                          <span className="font-semibold text-red-600">
+                            DP yang telah dibayarkan untuk Paket Wisata Silver Plus, Gold Plus, dan Diamond Plus tidak dapat dikembalikan (non-refundable) apabila terjadi pembatalan dari pihak tamu dengan alasan apa pun.
+                          </span>
+                        ) : (
+                          <span>
+                            Untuk reservasi dengan DP 5%, ketentuan pengembalian atau pengalihan jadwal akan mengikuti kebijakan yang berlaku dan kesepakatan kedua belah pihak.
+                          </span>
+                        )}
                       </p>
                     </div>
                   </div>
@@ -395,9 +435,93 @@ export default function PesanPage() {
                     </div>
                   </div>
 
+                  {/* Syarat & Ketentuan */}
+                  <div className="mt-8 mb-6">
+                    <label className="flex items-start gap-3 cursor-pointer">
+                      <div className="flex-shrink-0 mt-0.5">
+                        <input
+                          type="checkbox"
+                          checked={termsAgreed}
+                          onChange={(e) => setTermsAgreed(e.target.checked)}
+                          className="w-5 h-5 rounded border-gray-300 text-primary-600 focus:ring-primary-500 cursor-pointer"
+                        />
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        Saya menyetujui{" "}
+                        <button
+                          type="button"
+                          onClick={() => setShowTerms(!showTerms)}
+                          className="text-primary-600 font-bold hover:text-primary-700 underline underline-offset-2"
+                        >
+                          syarat dan ketentuan
+                        </button>{" "}
+                        yang berlaku
+                      </p>
+                    </label>
+
+                    {showTerms && (
+                      <div className="mt-4 p-5 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-600 space-y-4 max-h-[300px] overflow-y-auto">
+                        <h4 className="font-bold text-gray-900 text-sm">Ketentuan Pembayaran DP (Down Payment)</h4>
+                        
+                        <div className="space-y-1">
+                          <p className="font-bold text-gray-800">1. DP Reservasi 5%</p>
+                          <p>Pembayaran DP sebesar 5% dari total biaya berlaku untuk reservasi:</p>
+                          <ul className="list-disc pl-5 space-y-0.5 text-gray-500">
+                            <li>Outbound</li>
+                            <li>Villa</li>
+                            <li>Glamping</li>
+                            <li>Cabin</li>
+                            <li>Paket Wisata Perunggu</li>
+                            <li>Paket Wisata Silver</li>
+                            <li>Paket Wisata Gold</li>
+                            <li>Paket Wisata Diamond</li>
+                          </ul>
+                          <p>Reservasi dianggap sah dan jadwal akan diblokir setelah pembayaran DP diterima.</p>
+                        </div>
+
+                        <div className="space-y-1">
+                          <p className="font-bold text-gray-800">2. DP Reservasi 30%</p>
+                          <p>Pembayaran DP sebesar 30% dari total biaya berlaku untuk reservasi:</p>
+                          <ul className="list-disc pl-5 space-y-0.5 text-gray-500">
+                            <li>Paket Wisata Silver Plus</li>
+                            <li>Paket Wisata Gold Plus</li>
+                            <li>Paket Wisata Diamond Plus</li>
+                          </ul>
+                          <p>Reservasi dianggap sah dan jadwal akan diblokir setelah pembayaran DP diterima.</p>
+                        </div>
+
+                        <div className="space-y-1">
+                          <p className="font-bold text-gray-800">3. Ketentuan Pembatalan</p>
+                          <ul className="list-disc pl-5 space-y-1 text-gray-500">
+                            <li>DP yang telah dibayarkan untuk Paket Wisata Silver Plus, Gold Plus, dan Diamond Plus tidak dapat dikembalikan (non-refundable) apabila terjadi pembatalan dari pihak tamu dengan alasan apa pun.</li>
+                            <li>Untuk reservasi dengan DP 5%, ketentuan pengembalian atau pengalihan jadwal akan mengikuti kebijakan yang berlaku dan kesepakatan kedua belah pihak.</li>
+                          </ul>
+                        </div>
+
+                        <div className="space-y-1">
+                          <p className="font-bold text-gray-800">4. Pelunasan</p>
+                          <ul className="list-disc pl-5 space-y-1 text-gray-500">
+                            <li>Sisa pembayaran wajib dilunasi sesuai waktu yang telah disepakati antara tamu dan pihak penyelenggara.</li>
+                            <li>Kegiatan atau check-in dapat dilakukan setelah seluruh pembayaran dinyatakan lunas.</li>
+                          </ul>
+                        </div>
+
+                        <div className="space-y-1">
+                          <p className="font-bold text-gray-800">5. Persetujuan</p>
+                          <p>Dengan melakukan pembayaran DP, tamu dianggap telah membaca, memahami, dan menyetujui seluruh ketentuan yang berlaku.</p>
+                        </div>
+
+                        <div className="pt-3 border-t border-gray-200 mt-4 text-gray-500 font-semibold">
+                          <p>{company?.name || "Villa Situ Cileunca"}</p>
+                          <p>📞 Reservasi: {company?.phone || "+62 819-9545-1017"}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
                   <div className="flex gap-3">
                     <button onClick={handlePrev} disabled={submitting} className="flex-1 py-4 rounded-2xl bg-gray-100 text-gray-700 font-bold hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">Kembali</button>
-                    <button onClick={handleSubmit} disabled={submitting} className="flex-1 py-4 rounded-2xl bg-primary-600 text-white font-bold hover:bg-primary-700 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                    <button onClick={handleSubmit} disabled={submitting || !termsAgreed} className="flex-1 py-4 rounded-2xl bg-primary-600 text-white font-bold hover:bg-primary-700 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2">
                       {submitting && (
                         <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />

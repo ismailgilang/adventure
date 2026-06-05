@@ -42,6 +42,7 @@ export default function Navbar({ navScrolled, seo, company, toggleMenu }: Navbar
             {[
               { label: "Beranda", href: "/" },
               { label: "Paket Wisata", href: "/paket" },
+              { label: "Kalender", href: "/kalender" },
               { label: "Galeri", href: "/galeri" },
               { label: "Blog", href: "/blog" },
             ].map((item) => (
